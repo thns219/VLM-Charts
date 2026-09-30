@@ -27,6 +27,7 @@ cho từng câu, rồi tổng hợp accuracy — tách riêng theo loại "descr
 """
 
 import os
+import json
 import time
 
 import pandas as pd
@@ -67,13 +68,29 @@ REASONING_TYPE_MAP = {
 }
 
 # ==== CẤU HÌNH ====
-MODEL_NAME = "gemini-flash-latest"
-N_CHARTS = 20                          # số biểu đồ thử nghiệm (mỗi biểu đồ = 5 câu hỏi)
-SLEEP_BETWEEN_CALLS = 1.0
+MODEL_NAME = "gemini-3.5-flash-lite"   # free tier: 30 RPM, 1.500 RPD
+                                        # (gemini-2.5-flash-lite đã bị deprecated cho user mới;
+                                        # gemini-flash-latest -> gemini-3.8-flash chỉ có 20 RPD, không đủ dùng)
+SUBSET_FILE = "subset_chart_indices.json"  # danh sách chart_index cố định (seed=42),
+                                            # dùng chung với Qwen/RAG/Retrieval để so sánh công bằng
+SLEEP_BETWEEN_CALLS = 2.2               # gemini-3.5-flash-lite free tier: 30 RPM -> ~2s/request là an toàn
 MAX_RETRIES = 5
 MAX_IMAGE_SIDE = 1024
 CHECKPOINT_FILE = "baseline_results.csv"
 UNANSWERABLE_LABEL = "Not Applicable"   # đúng chuẩn CharXiv, giữ nguyên tiếng Anh để so khớp với đáp án gốc
+
+
+def load_chart_subset():
+    """Đọc danh sách chart_index cố định đã chọn trước (subset_chart_indices.json).
+    Nếu không tìm thấy file, báo lỗi rõ ràng thay vì âm thầm chạy sai tập dữ liệu."""
+    if not os.path.exists(SUBSET_FILE):
+        raise RuntimeError(
+            f"Không tìm thấy '{SUBSET_FILE}'. File này chứa danh sách chart_index "
+            "cố định (chung với Qwen/RAG/Retrieval) để đảm bảo so sánh công bằng. "
+            "Copy file này vào cùng thư mục trước khi chạy."
+        )
+    with open(SUBSET_FILE) as f:
+        return json.load(f)
 
 
 def get_client():
@@ -170,8 +187,9 @@ def run_baseline():
     print("Đang tải split 'validation' của CharXiv...")
     val_ds = load_dataset("princeton-nlp/CharXiv", split="validation")
 
-    n_charts = min(N_CHARTS, len(val_ds))
-    print(f"Chạy baseline trên {n_charts} biểu đồ đầu tiên ({n_charts * 5} câu hỏi)...")
+    chart_indices = load_chart_subset()
+    print(f"Chạy baseline trên {len(chart_indices)} biểu đồ đã chọn trước "
+          f"(subset seed=42, {len(chart_indices) * 5} câu hỏi)...")
 
     done_keys = set()
     if os.path.exists(CHECKPOINT_FILE):
@@ -184,7 +202,7 @@ def run_baseline():
 
     client = get_client()
 
-    for chart_idx in tqdm(range(n_charts)):
+    for chart_idx in tqdm(chart_indices):
         sample = val_ds[chart_idx]
         image = sample["image"]
 
