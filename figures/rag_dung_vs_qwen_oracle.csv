@@ -1,0 +1,7 @@
+﻿Phiên bản,Nhóm,n câu truy hồi đúng,RAG (%),"Qwen oracle, cùng câu (%)",Ghi chú
+RAG gốc,Suy luận,71,45.1,47.9,
+RAG gốc,Mô tả (4 câu),11,36.4,36.4,"n quá nhỏ, bỏ qua"
+RAG + L/14 letterbox,Suy luận,124,46.0,48.4,
+RAG + L/14 letterbox,Mô tả (4 câu),3,33.3,33.3,"n quá nhỏ, bỏ qua"
+RAG + L/14 letterbox + caption,Suy luận,125,48.8,50.4,
+RAG + L/14 letterbox + caption,Mô tả (4 câu),432,52.8,52.8,

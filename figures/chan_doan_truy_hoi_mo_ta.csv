@@ -1,0 +1,4 @@
+﻿Phiên bản,Số mẫu câu hỏi,Ảnh khác nhau / mẫu (min-trung vị-max),Tổng ảnh khác nhau (toàn bộ câu mô tả),Retrieval đúng (%),Accuracy khi truy hồi SAI (%),n sai
+RAG gốc,19,1-2-2,19,0.5,16.0,1989
+RAG + L/14 letterbox,19,1-1-1,9,0.2,6.8,1997
+RAG + L/14 letterbox + caption,19,17-86-108,244,21.6,9.4,1568

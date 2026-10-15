@@ -1,0 +1,7 @@
+﻿Hệ thống,Số câu,Tổng thể (%),KTC 95% Thấp,KTC 95% Cao,Number-in-Chart,Number-in-General,Text-in-Chart,Text-in-General
+Gemini 2.5 Flash (Oracle / Closed API),500,53.0,48.6,57.4,45.22,46.03,61.5,52.17
+Qwen2.5-VL-7B (Direct Baseline),500,38.8,34.6,43.0,45.22,26.98,40.38,47.83
+Standard CoT (2-Stage CoT),500,36.2,32.4,40.6,35.65,28.57,40.38,39.13
+LoRA CoT (Domain Grounded),500,34.8,30.8,38.8,40.87,25.4,38.5,28.26
+Adaptive LoRA CoT (Đề xuất / Proposed),500,37.4,33.2,41.8,45.22,30.16,37.09,39.13
+RAG-VQA (CLIP + Qwen),500,8.6,6.4,11.2,5.22,10.32,6.57,21.74

@@ -1,0 +1,5 @@
+﻿nhom,retrieval_correct,accuracy,n
+Mô tả (4 câu),False,9.4,1568
+Mô tả (4 câu),True,52.8,432
+Suy luận,False,2.7,375
+Suy luận,True,48.8,125

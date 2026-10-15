@@ -1,0 +1,10 @@
+﻿A,B,Nhóm câu,Hiệu B-A (điểm %),KTC95 thấp,KTC95 cao,KTC chứa 0?,Chỉ B đúng,Chỉ A đúng
+RAG gốc,RAG + L/14 letterbox,Tất cả câu,-6.44,-7.92,-4.96,không,135,296
+RAG gốc,RAG + L/14 letterbox,Mô tả D1-D3,-0.13,-1.8,1.53,có,89,91
+RAG gốc,RAG + L/14 letterbox,Suy luận,5.0,1.8,8.2,không,46,21
+RAG gốc,RAG + L/14 letterbox + caption,Tất cả câu,3.28,1.24,5.36,không,318,236
+RAG gốc,RAG + L/14 letterbox + caption,Mô tả D1-D3,12.6,9.8,15.53,không,260,71
+RAG gốc,RAG + L/14 letterbox + caption,Suy luận,5.6,2.4,8.6,không,46,18
+RAG + L/14 letterbox,RAG + L/14 letterbox + caption,Tất cả câu,9.72,7.96,11.48,không,312,69
+RAG + L/14 letterbox,RAG + L/14 letterbox + caption,Mô tả D1-D3,12.73,10.07,15.47,không,258,67
+RAG + L/14 letterbox,RAG + L/14 letterbox + caption,Suy luận,0.6,-0.4,1.6,có,5,2

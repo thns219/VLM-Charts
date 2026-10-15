@@ -1,0 +1,7 @@
+﻿Phiên bản,Nhóm,Hit@1 Hình B (%),Truy hồi đúng trong file VQA (%),Lệch (điểm %)
+RAG gốc,Suy luận,14.0,14.2,0.2
+RAG gốc,Mô tả,0.2,0.5,0.3
+RAG + L/14 letterbox,Suy luận,24.8,24.8,0.0
+RAG + L/14 letterbox,Mô tả,0.2,0.2,-0.1
+RAG + L/14 letterbox + caption,Suy luận,24.8,25.0,0.2
+RAG + L/14 letterbox + caption,Mô tả,22.0,21.6,-0.4
