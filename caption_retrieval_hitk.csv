@@ -1,0 +1,2 @@
+﻿config_name,query_source,question_type,n_evaluated,hit_at_1,hit_at_5,hit_at_10
+vitl14_letterbox,caption,descriptive,500,0.22,0.382,0.45

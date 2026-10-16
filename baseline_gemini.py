@@ -70,7 +70,7 @@ REASONING_TYPE_MAP = {
 }
 
 # ==== CẤU HÌNH ====
-MODEL_NAME = "gemini-3.5-flash-lite"   # free tier: 30 RPM, 1.500 RPD
+MODEL_NAME = "gemini-3.5-flash-lite"   # free tier: 500 RPD (theo thông báo lỗi 429 của API), ~30 RPM
 SUBSET_FILE = "subset_chart_indices.json"
 SLEEP_BETWEEN_CALLS = 2.2
 MAX_RETRIES = 6
@@ -187,7 +187,18 @@ def iter_questions(sample):
 def save_checkpoint(results):
     tmp = CHECKPOINT_FILE + ".tmp"
     pd.DataFrame(results).to_csv(tmp, index=False, encoding="utf-8-sig")
-    os.replace(tmp, CHECKPOINT_FILE)
+    # Trên Windows, os.replace báo PermissionError nếu file đích đang bị mở
+    # (Excel, preview của VS Code, OneDrive, antivirus...). Thử lại vài lần.
+    for attempt in range(5):
+        try:
+            os.replace(tmp, CHECKPOINT_FILE)
+            return
+        except PermissionError:
+            time.sleep(2)
+    backup = CHECKPOINT_FILE.replace(".csv", "_backup.csv")
+    pd.DataFrame(results).to_csv(backup, index=False, encoding="utf-8-sig")
+    print(f"\n[CẢNH BÁO] Không ghi đè được '{CHECKPOINT_FILE}' (đang bị mở bởi chương trình khác?). "
+          f"Đã lưu bản dự phòng vào '{backup}'. Hãy đóng file CSV rồi đổi tên bản dự phòng.")
 
 
 def run_baseline():
@@ -204,7 +215,9 @@ def run_baseline():
         prev = pd.read_csv(CHECKPOINT_FILE, keep_default_na=False)
         n_empty = int((prev["prediction"].astype(str).str.strip() == "").sum())
         # Dòng có dự đoán rỗng coi như CHƯA LÀM -> bỏ khỏi checkpoint để chạy lại
-        prev = prev[prev["prediction"].astype(str).str.strip() != ""]
+        prev = prev[prev["prediction"].astype(str).str.strip() != ""].copy()
+        # chấm lại bằng match_fixed: cột 'correct' cũ được tính bằng simple_match (quá dễ dãi)
+        prev["correct"] = [match_fixed(p, g) for p, g in zip(prev["prediction"], prev["gold_answer"])]
         done_keys = set(zip(prev["chart_index"], prev["slot"]))
         results = prev.to_dict("records")
         print(f"Checkpoint: {len(done_keys)} câu hợp lệ; {n_empty} câu rỗng cũ sẽ được chạy lại.")

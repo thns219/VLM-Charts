@@ -1,0 +1,9 @@
+﻿config_name,model,preprocess,n_charts,query_type,hit_at_1,hit_at_5,hit_at_10
+vitb32_centercrop,openai/clip-vit-base-patch32,centercrop,500,descriptive,0.002,0.01,0.02
+vitb32_centercrop,openai/clip-vit-base-patch32,centercrop,500,reasoning,0.14,0.25,0.298
+vitb32_letterbox,openai/clip-vit-base-patch32,letterbox,500,descriptive,0.002,0.01,0.02
+vitb32_letterbox,openai/clip-vit-base-patch32,letterbox,500,reasoning,0.058,0.126,0.154
+vitb32_tiling,openai/clip-vit-base-patch32,tiling,500,descriptive,0.002,0.01,0.02
+vitb32_tiling,openai/clip-vit-base-patch32,tiling,500,reasoning,0.178,0.286,0.346
+vitl14_letterbox,openai/clip-vit-large-patch14,letterbox,500,descriptive,0.002,0.01,0.02
+vitl14_letterbox,openai/clip-vit-large-patch14,letterbox,500,reasoning,0.248,0.35,0.406

@@ -1,0 +1,20 @@
+# Virtual Environments
+venv/
+.venv/
+env/
+.env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Heavy local datasets / vector DBs
+charxiv_all_images/
+charxiv_samples/
+chroma_charxiv/
+
+# IDE
+.vscode/
+.idea/
