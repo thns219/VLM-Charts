@@ -10,10 +10,17 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Heavy local datasets / vector DBs
+# Heavy local datasets / vector DBs / large archives
 charxiv_all_images/
 charxiv_samples/
 chroma_charxiv/
+slake_data/
+*.zip
+*.tar.gz
+
+# Scratch files
+slake_vqa_rescored.csv
+rescore_slake_medical.py
 
 # IDE
 .vscode/

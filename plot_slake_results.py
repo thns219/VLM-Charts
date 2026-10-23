@@ -28,7 +28,6 @@ import matplotlib.pyplot as plt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CSV_PRIMARY = os.path.join(HERE, "slake_vqa_results.csv")
-CSV_RESCORING = os.path.join(HERE, "slake_vqa_rescored.csv")
 OUT_DIR = os.path.join(HERE, "figures")
 os.makedirs(OUT_DIR, exist_ok=True)
 
@@ -61,18 +60,11 @@ COLOR_ADAPTIVE = '#2563EB'     # Xanh dương hoàng gia (Adaptive CoT - Điểm
 
 
 def load_best_dataset():
-    """Tự động ưu tiên nạp file slake_vqa_results.csv có kết quả mới nhất."""
+    """Tự động nạp file slake_vqa_results.csv chính thức."""
     if os.path.exists(CSV_PRIMARY):
-        df = pd.read_csv(CSV_PRIMARY)
-        if "acc_med_adaptive" in df.columns or "acc_adaptive" in df.columns:
-            print(f"Đang đọc dữ liệu chính xác nhất từ: {CSV_PRIMARY}")
-            return df
-    if os.path.exists(CSV_RESCORING):
-        print(f"Đang đọc dữ liệu từ: {CSV_RESCORING}")
-        return pd.read_csv(CSV_RESCORING)
-    if os.path.exists(CSV_PRIMARY):
+        print(f"Đang đọc dữ liệu chính xác nhất từ: {CSV_PRIMARY}")
         return pd.read_csv(CSV_PRIMARY)
-    print("Không tìm thấy file kết quả!")
+    print("Không tìm thấy file kết quả slake_vqa_results.csv!")
     return None
 
 
