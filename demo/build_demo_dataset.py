@@ -1,0 +1,568 @@
+# -*- coding: utf-8 -*-
+"""build_demo_dataset.py — Xuất dữ liệu thực nghiệm chuẩn hóa cho Demo App."""
+
+import os
+import sys
+import json
+import pandas as pd
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+DEMO_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(DEMO_DIR)
+os.makedirs(DEMO_DIR, exist_ok=True)
+
+# 1. CharXiv Curated Cases
+charxiv_cases = [
+    {
+        "id": "charxiv_4",
+        "domain": "charxiv",
+        "domain_label": "Biểu đồ Khoa học (CharXiv)",
+        "chart_index": 4,
+        "image_path": "charxiv_all_images/validation/chart_00004.png",
+        "question": "Which city experiences the most 'zig-zagging' in stay at home rates with respect to the number of daily new confirmed Covid-19 cases?",
+        "sub_type": "Text-in-Chart (Quỹ đạo Trực quan)",
+        "gold_answer": "Kansas City",
+        "phenomenon": "overthinking",
+        "phenomenon_label": "CoT Overthinking (Suy diễn thừa)",
+        "phenomenon_badge": "warning",
+        "direct": {
+            "pred": "Kansas City",
+            "correct": True,
+            "latency": "1.2s",
+            "tokens": 42
+        },
+        "cot": {
+            "thought": "Reasoning Step 1: The chart displays stay-at-home rate trajectories vs daily new confirmed cases for five distinct cities: Boston, Chicago, Los Angeles, Houston, and Kansas City.\nStep 2: Examining Boston: the curve shows rapid oscillations back and forth during the surge period.\nStep 3: Comparing with Kansas City and Chicago, Boston's turnarounds occur across wider case ranges, creating the sharpest reversals.\nConclusion: Therefore, Boston shows the most zig-zagging pattern.",
+            "pred": "Boston",
+            "correct": False,
+            "latency": "4.8s",
+            "tokens": 184,
+            "diagnosis": "Mô hình trực tiếp (No-CoT) nhận diện hình dạng zig-zag của Kansas City trong 1 bước. Khi ép dùng CoT, mô hình sinh phân tích quá đà cho từng thành phố, bị lạc hướng bởi sự dao động của Boston và kết luận sai hoàn toàn."
+        },
+        "adaptive": {
+            "route": "Direct_Perceptual_Routing",
+            "route_label": "⚡ Định tuyến Trực tiếp (No-CoT)",
+            "justification": "Câu hỏi nhận diện mẫu hình trực quan dạng 'zig-zagging' trên đồ thị phân tán. Bộ phân loại Intent nhận diện đây là tác vụ Nhận biết Trực giác (Visual Intuition) -> Tắt CoT để triệt tiêu Hallucination.",
+            "pred": "Kansas City",
+            "correct": True,
+            "latency": "1.2s"
+        }
+    },
+    {
+        "id": "charxiv_9",
+        "domain": "charxiv",
+        "domain_label": "Biểu đồ Khoa học (CharXiv)",
+        "chart_index": 9,
+        "image_path": "charxiv_all_images/validation/chart_00009.png",
+        "question": "How many data points have a DAVIS-2017 J & F Mean score of less than 50?",
+        "sub_type": "Number-in-General (Đếm Điểm Trực quan)",
+        "gold_answer": "3",
+        "phenomenon": "overthinking",
+        "phenomenon_label": "CoT Overthinking (Đọc lệch Tọa độ)",
+        "phenomenon_badge": "warning",
+        "direct": {
+            "pred": "3",
+            "correct": True,
+            "latency": "1.1s",
+            "tokens": 38
+        },
+        "cot": {
+            "thought": "Reasoning Step 1: The y-axis represents the DAVIS-2017 J & F Mean score ranging from 30 to 90.\nStep 2: Locate the horizontal threshold line at y = 50.\nStep 3: Inspect data points below y = 50: Point 1 is at x ≈ 10, Point 2 is at x ≈ 25. The third point lies very close to the y=50 threshold and might have a value of exactly 50 or slightly above due to visual blur.\nConclusion: Discarding the ambiguous borderline point, there are 2 data points strictly below 50.",
+            "pred": "2",
+            "correct": False,
+            "latency": "4.1s",
+            "tokens": 162,
+            "diagnosis": "CoT khiến mô hình phân tích chi li đến mức hoài nghi điểm dữ liệu nằm sát ngưỡng 50, dẫn đến việc tự ý loại bỏ điểm này và đưa ra kết quả thiếu (2 thay vì 3)."
+        },
+        "adaptive": {
+            "route": "Direct_Counting_Routing",
+            "route_label": "⚡ Định tuyến Đếm Trực quan",
+            "justification": "Tác vụ đếm phần tử quan sát trực tiếp (Direct Visual Counting). Bộ định tuyến kích hoạt chế độ No-CoT, bảo vệ kết quả đếm tổng thể chuẩn xác.",
+            "pred": "3",
+            "correct": True,
+            "latency": "1.1s"
+        }
+    },
+    {
+        "id": "charxiv_14",
+        "domain": "charxiv",
+        "domain_label": "Biểu đồ Khoa học (CharXiv)",
+        "chart_index": 14,
+        "image_path": "charxiv_all_images/validation/chart_00014.png",
+        "question": "For the subplot labeled hopper:stand, what is the maximum episode return approximately achieved at 10h?",
+        "sub_type": "Number-in-Chart (Gióng trục Số học)",
+        "gold_answer": "750",
+        "phenomenon": "breakthrough",
+        "phenomenon_label": "CoT Breakthrough (Đột phá Số học)",
+        "phenomenon_badge": "success",
+        "direct": {
+            "pred": "800",
+            "correct": False,
+            "latency": "1.3s",
+            "tokens": 40
+        },
+        "cot": {
+            "thought": "Reasoning Step 1: Focus on the subplot grid with the title 'hopper:stand'.\nStep 2: The horizontal x-axis shows Walltime (hours). Locate the tick mark for 10h.\nStep 3: Trace vertically upwards along the 10h line to identify the curve reaching the highest value (purple/blue curve).\nStep 4: Project this intersection point horizontally to the vertical y-axis (Episode Return). The mark falls precisely halfway between 700 and 800, which corresponds to 750.",
+            "pred": "750",
+            "correct": True,
+            "latency": "5.2s",
+            "tokens": 195,
+            "diagnosis": "Direct No-CoT chỉ nhìn lướt qua và ước lượng làm tròn 800 (sai số lớn). CoT phân rã quy trình thành 4 bước gióng trục chuẩn xác, tìm đúng giá trị 750."
+        },
+        "adaptive": {
+            "route": "CoT_Math_Calculation",
+            "route_label": "🧠 Kích hoạt CoT Số học & Gióng trục",
+            "justification": "Câu hỏi thuộc nhóm 'Number-in-Chart' đòi hỏi gióng tọa độ đa chiều (x=10h -> y-axis). Bộ phân loại nhận diện Intent tính toán -> Bật Structured CoT.",
+            "pred": "750",
+            "correct": True,
+            "latency": "5.2s"
+        }
+    },
+    {
+        "id": "charxiv_20",
+        "domain": "charxiv",
+        "domain_label": "Biểu đồ Khoa học (CharXiv)",
+        "chart_index": 20,
+        "image_path": "charxiv_all_images/validation/chart_00020.png",
+        "question": "What algorithm shows the highest average caching reward at epoch 0?",
+        "sub_type": "Text-in-Chart (Đối chiếu Chú giải Legend)",
+        "gold_answer": "PD-HDDPG, plain",
+        "phenomenon": "breakthrough",
+        "phenomenon_label": "CoT Breakthrough (Đối chiếu Legend Đa bước)",
+        "phenomenon_badge": "success",
+        "direct": {
+            "pred": "RCU",
+            "correct": False,
+            "latency": "1.2s",
+            "tokens": 36
+        },
+        "cot": {
+            "thought": "Reasoning Step 1: Locate x = 0 on the horizontal axis (Epoch 0).\nStep 2: Inspect all curve markers at x = 0. The topmost data point has a value around 0.65 and is marked by an unfilled blue triangle.\nStep 3: Map the blue triangle symbol to the legend box on the upper right.\nStep 4: The blue triangle corresponds to 'PD-HDDPG, plain'. (RCU is represented by orange circles further down).",
+            "pred": "PD-HDDPG",
+            "correct": True,
+            "latency": "4.9s",
+            "tokens": 180,
+            "diagnosis": "Đòi hỏi phân giải 2 bước: (1) tìm điểm cực trị tại epoch 0, (2) đối chiếu marker với Legend. Direct đoán mò RCU, trong khi CoT suy luận chuẩn."
+        },
+        "adaptive": {
+            "route": "CoT_Legend_Reasoning",
+            "route_label": "🧠 Kích hoạt CoT Đối chiếu Đa bước",
+            "justification": "Câu hỏi suy luận phức hợp kết hợp tọa độ cực trị và bảng chú thích. Phải dùng CoT để tránh nhầm lẫn giữa các marker tương đồng.",
+            "pred": "PD-HDDPG",
+            "correct": True,
+            "latency": "4.9s"
+        }
+    },
+    {
+        "id": "charxiv_rag_collapse",
+        "domain": "charxiv",
+        "domain_label": "Biểu đồ Khoa học (CharXiv)",
+        "chart_index": 0,
+        "image_path": "charxiv_all_images/validation/chart_00000.png",
+        "question": "What is the maximum value of the tick labels on the continuous legend (i.e., colorbar)?",
+        "sub_type": "Descriptive_4 (Không thể trả lời - Not Applicable)",
+        "gold_answer": "Not Applicable",
+        "phenomenon": "rag_collapse",
+        "phenomenon_label": "RAG Retrieval Collapse (Kẹt Truy hồi Cố định)",
+        "phenomenon_badge": "danger",
+        "direct": {
+            "pred": "Not Applicable",
+            "correct": True,
+            "latency": "1.0s",
+            "tokens": 30
+        },
+        "cot": {
+            "thought": "Hệ thống RAG dùng CLIP ViT-L/14 thuần (không caption). Vì câu hỏi là câu mẫu chung 'What is the maximum value...', CLIP text encoder bị kẹt và luôn truy hồi về cùng một biểu đồ #77 (vốn có colorbar đầy đủ). Qwen nhìn vào ảnh #77 thấy colorbar ghi số 100, nên trả lời 100 thay vì phát hiện ảnh gốc #0 không hề có colorbar!",
+            "pred": "100",
+            "correct": False,
+            "latency": "3.5s",
+            "tokens": 110,
+            "diagnosis": "CLIP bị kẹt truy hồi về 1 vài ảnh cố định cho toàn bộ 500 câu D4. Kết quả là mô hình trả lời số thật trên ảnh sai, khiến độ chính xác D4 sụp đổ về 0.0%!"
+        },
+        "adaptive": {
+            "route": "Hybrid_Caption_RAG",
+            "route_label": "🔄 Đột phá RAG: Nhúng Caption Bài báo",
+            "justification": "Nhúng Caption thực tế vào không gian vector. CLIP phân biệt được bài báo có chứa biểu đồ không colorbar -> Truy hồi đúng ảnh #0 -> Trả lời chuẩn 'Not Applicable'.",
+            "pred": "Not Applicable",
+            "correct": True,
+            "latency": "2.2s"
+        }
+    }
+]
+
+# 2. SLAKE Med-VQA Curated Cases
+slake_cases = [
+    {
+        "id": "slake_11970",
+        "domain": "slake",
+        "domain_label": "Ảnh Y khoa (SLAKE Med-VQA)",
+        "qid": 11970,
+        "image_path": "imgs/xmlab124/source.jpg",
+        "question": "Are there abnormalities in this image?",
+        "sub_type": "Closed (Yes/No) - Phát hiện Bất thường",
+        "gold_answer": "Yes",
+        "phenomenon": "overthinking",
+        "phenomenon_label": "CoT Overthinking & Hallucination Y khoa",
+        "phenomenon_badge": "warning",
+        "direct": {
+            "pred": "Yes",
+            "correct": True,
+            "latency": "1.1s",
+            "tokens": 32
+        },
+        "cot": {
+            "thought": "Reasoning Step 1: The image presents a frontal chest radiograph (X-ray).\nStep 2: High-density metallic structures are visible in the midline, compatible with sternal closure wires from prior cardiothoracic surgery.\nStep 3: However, these metallic wires are post-operative surgical hardware rather than an acute or active pathological lesion.\nStep 4: Looking at the lung parenchyma and costophrenic angles, no distinct consolidation or pneumothorax is identified.\nConclusion: In the context of active disease, there are no abnormalities -> Answer: No.",
+            "pred": "No",
+            "correct": False,
+            "latency": "5.6s",
+            "tokens": 210,
+            "diagnosis": "Mô hình nhận ra bất thường (chỉ thép phẫu thuật lồng ngực), nhưng chuỗi suy luận dài khiến nó 'nghĩ quá nhiều' và tự lập luận rằng đây là di chứng hậu phẫu chứ không phải bệnh cấp tính, dẫn đến kết luận 'No' sai lầm."
+        },
+        "adaptive": {
+            "route": "NoCoT_Closed_Direct",
+            "route_label": "⚡ Định tuyến Câu hỏi Đóng Trực tiếp",
+            "justification": "Câu hỏi dạng Yes/No về sự hiện diện bất thường thị giác. Bộ định tuyến lâm sàng chặn suy luận lan man để bảo tồn độ chính xác trực quan (69.47% -> 71.15%).",
+            "pred": "Yes",
+            "correct": True,
+            "latency": "1.1s"
+        }
+    },
+    {
+        "id": "slake_11989",
+        "domain": "slake",
+        "domain_label": "Ảnh Y khoa (SLAKE Med-VQA)",
+        "qid": 11989,
+        "image_path": "imgs/xmlab135/source.jpg",
+        "question": "Are there abnormalities in this image?",
+        "sub_type": "Closed (Yes/No) - Phát hiện Đông đặc Phổi",
+        "gold_answer": "Yes",
+        "phenomenon": "overthinking",
+        "phenomenon_label": "CoT Overthinking (Nghi ngờ Triệu chứng)",
+        "phenomenon_badge": "warning",
+        "direct": {
+            "pred": "Yes",
+            "correct": True,
+            "latency": "1.0s",
+            "tokens": 30
+        },
+        "cot": {
+            "thought": "Reasoning Step 1: Frontal chest radiograph of an adult patient.\nStep 2: There is increased opacity in the right lower lung zone.\nStep 3: Evaluating whether this opacity represents true pulmonary consolidation, atelectasis, or poor inspiratory effort with overlying soft tissue shadow.\nStep 4: Given the symmetric bronchovascular markings and normal cardiothoracic ratio, the visual finding might be artifactual.\nConclusion: The radiograph appears within normal limits -> Answer: No.",
+            "pred": "No",
+            "correct": False,
+            "latency": "5.1s",
+            "tokens": 190,
+            "diagnosis": "Suy luận CoT tạo điều kiện cho mô hình tự hoài nghi vùng đông đặc phổi phải, gán cho nó là nhiễu ảnh (artifact) và lật ngược đáp án đúng thành sai."
+        },
+        "adaptive": {
+            "route": "NoCoT_Closed_Direct",
+            "route_label": "⚡ Định tuyến Trực tiếp No-CoT",
+            "justification": "Tác vụ phát hiện triệu chứng thị giác đóng. Định tuyến trực tiếp giúp mô hình quyết đoán đưa ra kết luận 'Yes' ngay khi phát hiện đám mờ.",
+            "pred": "Yes",
+            "correct": True,
+            "latency": "1.0s"
+        }
+    },
+    {
+        "id": "slake_11938",
+        "domain": "slake",
+        "domain_label": "Ảnh Y khoa (SLAKE Med-VQA)",
+        "qid": 11938,
+        "image_path": "imgs/xmlab102/source.jpg",
+        "question": "Does the picture contain liver?",
+        "sub_type": "Closed (Yes/No) - Xác minh Giải phẫu Cắt lớp",
+        "gold_answer": "No",
+        "phenomenon": "breakthrough",
+        "phenomenon_label": "CoT Verification (Đột phá Kiểm chứng Giải phẫu)",
+        "phenomenon_badge": "success",
+        "direct": {
+            "pred": "Yes",
+            "correct": False,
+            "latency": "1.0s",
+            "tokens": 30
+        },
+        "cot": {
+            "thought": "Reasoning Step 1: Analyze the slice modality and anatomical level: Axial CT scan of the upper thoracic cavity.\nStep 2: Identify anatomical landmarks: Bilateral lung parenchyma, thoracic vertebrae, sternum, and carina of the trachea.\nStep 3: Check anatomical boundaries: The liver is located in the right upper abdominal quadrant, inferior to the diaphragm.\nStep 4: At this high thoracic cut, neither diaphragm nor hepatic parenchyma is present in the field of view.\nConclusion: The liver is NOT present in this image -> Answer: No.",
+            "pred": "No",
+            "correct": True,
+            "latency": "4.8s",
+            "tokens": 185,
+            "diagnosis": "Direct No-CoT có thiên vị ngầm (prior bias) thường trả lời 'Yes' cho câu hỏi hiện diện cơ quan nội tạng. CoT buộc mô hình xác định lát cắt lồng ngực cao, từ đó khẳng định gan không thể xuất hiện ở lát cắt này."
+        },
+        "adaptive": {
+            "route": "CoT_Closed_Verification",
+            "route_label": "🧠 Kích hoạt CoT Kiểm chứng Vị trí Lát cắt",
+            "justification": "Câu hỏi kiểm tra sự hiện diện của cơ quan nằm ngoài lát cắt giải phẫu chuẩn. Kích hoạt CoT để kiểm chứng không gian 3D của lát cắt CT.",
+            "pred": "No",
+            "correct": True,
+            "latency": "4.8s"
+        }
+    },
+    {
+        "id": "slake_11940",
+        "domain": "slake",
+        "domain_label": "Ảnh Y khoa (SLAKE Med-VQA)",
+        "qid": 11940,
+        "image_path": "imgs/xmlab102/source.jpg",
+        "question": "Does the picture contain heart?",
+        "sub_type": "Closed (Yes/No) - Xác minh Lát cắt Trung thất",
+        "gold_answer": "No",
+        "phenomenon": "breakthrough",
+        "phenomenon_label": "CoT Verification (Kiểm chứng Trung thất Trên)",
+        "phenomenon_badge": "success",
+        "direct": {
+            "pred": "Yes",
+            "correct": False,
+            "latency": "1.0s",
+            "tokens": 30
+        },
+        "cot": {
+            "thought": "Reasoning Step 1: Inspect the axial CT mediastinal window.\nStep 2: Major structures seen are the aortic arch / great vessels, trachea, and superior vena cava.\nStep 3: The cardiac chambers (ventricles and atria) reside in the middle and lower mediastinum at caudal slices.\nStep 4: At this supra-cardiac level, the heart itself is not visible.\nConclusion: Answer: No.",
+            "pred": "No",
+            "correct": True,
+            "latency": "4.5s",
+            "tokens": 172,
+            "diagnosis": "Direct đoán mò 'Yes' vì thấy vùng trung thất. CoT giúp phân biệt mạch máu lớn vùng cổ/ngực trên với các buồng tim ở lát cắt dưới."
+        },
+        "adaptive": {
+            "route": "CoT_Closed_Verification",
+            "route_label": "🧠 Kích hoạt CoT Kiểm chứng Trung thất",
+            "justification": "Phân biệt lát cắt mạch máu lớn ngực trên và buồng tim. Bật CoT đa bước để loại trừ cấu trúc giải phẫu.",
+            "pred": "No",
+            "correct": True,
+            "latency": "4.5s"
+        }
+    },
+    {
+        "id": "slake_modality",
+        "domain": "slake",
+        "domain_label": "Ảnh Y khoa (SLAKE Med-VQA)",
+        "qid": 11936,
+        "image_path": "imgs/xmlab102/source.jpg",
+        "question": "What is the modality of this image?",
+        "sub_type": "Open-Ended - Phân loại Kỹ thuật Tạo ảnh",
+        "gold_answer": "CT",
+        "phenomenon": "breakthrough",
+        "phenomenon_label": "Nhận biết Phương thái Tạo ảnh (Modality)",
+        "phenomenon_badge": "info",
+        "direct": {
+            "pred": "CT",
+            "correct": True,
+            "latency": "0.9s",
+            "tokens": 25
+        },
+        "cot": {
+            "thought": "The image displays cross-sectional tomographic slices with bone showing high radiodensity (white) and air in lungs showing black (Hounsfield units -1000). This corresponds to Computed Tomography (CT).",
+            "pred": "CT",
+            "correct": True,
+            "latency": "3.8s",
+            "tokens": 130,
+            "diagnosis": "Cả hai mô hình đều trả lời đúng, nhưng Direct trả lời súc tích trong 0.9s giúp tiết kiệm 80% tài nguyên tính toán."
+        },
+        "adaptive": {
+            "route": "NoCoT_Modality_FastTrack",
+            "route_label": "⚡ Định tuyến Phương thái Siêu tốc",
+            "justification": "Nhận diện modality là tác vụ toàn thể (global texture recognition). Định tuyến trực tiếp giúp phản hồi tức thì với độ chính xác tuyệt đối.",
+            "pred": "CT",
+            "correct": True,
+            "latency": "0.9s"
+        }
+    }
+]
+
+# 3. Comprehensive Global Benchmarks
+global_stats = {
+    "charxiv": {
+        "title": "Biểu đồ Khoa học (CharXiv - 2.500 Câu hỏi)",
+        "sample_count": 2500,
+        "charts_count": 500,
+        "systems": [
+            {
+                "name": "Gemini 3.5 Flash (Oracle API)",
+                "type": "oracle",
+                "overall": 70.5,
+                "ci95": [68.7, 72.3],
+                "descriptive": 69.4,
+                "reasoning": 53.0,
+                "unanswerable": 91.2,
+                "color": "#2563EB"
+            },
+            {
+                "name": "Qwen2.5-VL-7B (Direct Oracle Ảnh)",
+                "type": "baseline",
+                "overall": 47.7,
+                "ci95": [45.8, 49.5],
+                "descriptive": 61.1,
+                "reasoning": 38.8,
+                "unanswerable": 16.2,
+                "color": "#0D9488"
+            },
+            {
+                "name": "Adaptive LoRA CoT (Đề xuất)",
+                "type": "proposed",
+                "overall": 47.2,
+                "ci95": [45.3, 49.0],
+                "descriptive": 60.5,
+                "reasoning": 37.4,
+                "unanswerable": 16.0,
+                "color": "#EA580C",
+                "highlight": "Giữ vững 45.22% ở Số học Number-in-Chart (bằng trần Gemini)"
+            },
+            {
+                "name": "Standard CoT (2-Stage CoT)",
+                "type": "cot",
+                "overall": 45.4,
+                "ci95": [43.5, 47.3],
+                "descriptive": 58.0,
+                "reasoning": 36.2,
+                "unanswerable": 15.5,
+                "color": "#94A3B8"
+            },
+            {
+                "name": "RAG + L/14 Letterbox + Caption",
+                "type": "rag_improved",
+                "overall": 17.9,
+                "ci95": [15.9, 19.9],
+                "descriptive": 21.8,
+                "reasoning": 14.2,
+                "unanswerable": 9.8,
+                "color": "#10B981"
+            },
+            {
+                "name": "RAG gốc (CLIP B/32 Center-crop)",
+                "type": "rag_base",
+                "overall": 14.6,
+                "ci95": [13.2, 16.0],
+                "descriptive": 9.2,
+                "reasoning": 8.6,
+                "unanswerable": 36.8,
+                "color": "#EF4444"
+            }
+        ],
+        "retrieval_gap": {
+            "title": "Nút thắt Khâu Truy hồi (Retrieval Bottleneck)",
+            "correct_retrieval_acc": 48.8,
+            "incorrect_retrieval_acc": 2.7,
+            "ratio": "Gấp 18.1 lần",
+            "ideal_oracle_acc": 50.4
+        },
+        "reasoning_breakdown": {
+            "number_in_chart": {"gemini": 45.22, "qwen_direct": 45.22, "cot": 35.65, "adaptive": 45.22},
+            "text_in_chart": {"gemini": 61.5, "qwen_direct": 40.38, "cot": 40.38, "adaptive": 37.09},
+            "number_in_gen": {"gemini": 46.03, "qwen_direct": 26.98, "cot": 28.57, "adaptive": 30.16},
+            "text_in_gen": {"gemini": 52.17, "qwen_direct": 47.83, "cot": 39.13, "adaptive": 39.13}
+        }
+    },
+    "slake": {
+        "title": "Ảnh Y khoa (SLAKE Med-VQA - 1.061 Câu hỏi)",
+        "sample_count": 1061,
+        "closed_count": 416,
+        "open_count": 645,
+        "metrics": [
+            {
+                "name": "Tổng thể Strict Accuracy (EM)",
+                "no_cot": 50.24,
+                "standard_cot": 45.90,
+                "adaptive": 52.59,
+                "delta": "+2.36% (so với Direct), +6.69% (so với CoT)"
+            },
+            {
+                "name": "Tổng thể Medical Semantic Accuracy",
+                "no_cot": 55.33,
+                "standard_cot": 48.63,
+                "adaptive": 57.68,
+                "delta": "+2.36% (so với Direct), +9.05% (so với CoT)"
+            },
+            {
+                "name": "Câu hỏi Đóng Closed (Yes/No)",
+                "no_cot": 69.47,
+                "standard_cot": 61.78,
+                "adaptive": 71.15,
+                "delta": "+1.68% (so với Direct), +9.37% (so với CoT)"
+            },
+            {
+                "name": "Câu hỏi Mở Open Strict Accuracy",
+                "no_cot": 37.83,
+                "standard_cot": 35.66,
+                "adaptive": 40.62,
+                "delta": "+2.79% (so với Direct)"
+            },
+            {
+                "name": "Câu hỏi Mở Medical Semantic Acc",
+                "no_cot": 46.20,
+                "standard_cot": 40.16,
+                "adaptive": 48.99,
+                "delta": "+2.79% (so với Direct)"
+            },
+            {
+                "name": "Open BLEU-1",
+                "no_cot": 0.2863,
+                "standard_cot": 0.2835,
+                "adaptive": 0.3053,
+                "delta": "+0.0190"
+            },
+            {
+                "name": "Open ROUGE-L",
+                "no_cot": 0.3723,
+                "standard_cot": 0.3346,
+                "adaptive": 0.3916,
+                "delta": "+0.0193"
+            }
+        ]
+    }
+}
+
+# 4. Publication Figures Registry
+figures_registry = [
+    {
+        "id": "fig_so_sanh_tong_the",
+        "title": "Hình 1: So sánh Toàn cảnh Đa thể thức trên CharXiv (500 câu suy luận)",
+        "file": "figures/fig_so_sanh_tong_the_multimodal.png",
+        "description": "Đối chứng 5 hệ thống: Gemini Oracle, Qwen Direct, Standard CoT, LoRA CoT, Adaptive LoRA và RAG-VQA. Thể hiện rõ sự phục hồi của Adaptive LoRA và điểm nghẽn của RAG."
+    },
+    {
+        "id": "slake_adaptive_multimodal",
+        "title": "Hình 2: Tổng hợp Kết quả Đột phá trên SLAKE Med-VQA (1.061 câu)",
+        "file": "figures/slake_adaptive_multimodal_comparison.png",
+        "description": "Bức tranh toàn cảnh 3 mô hình (No-CoT vs Standard CoT vs Adaptive CoT) trên các nhóm chỉ số: Closed Accuracy, Open Strict, Open Medical Semantic, BLEU-1, ROUGE-L."
+    },
+    {
+        "id": "hinh_A_rag",
+        "title": "Hình 3: Tiến trình Cải tiến Hệ thống Multimodal RAG qua 3 Phiên bản",
+        "file": "figures_rag/hinh_A_tong_the_3_phien_ban.png",
+        "description": "Từ RAG gốc (14.6%) -> Cải tiến Letterbox ViT-L/14 (8.2%) -> Nhúng Caption bài báo (17.9%). Nhóm câu hỏi mô tả D1-D3 tăng vọt từ 9.2% lên 21.8%."
+    },
+    {
+        "id": "hinh_C_dung_sai",
+        "title": "Hình 4: Tác động Quyết định của Khâu Truy hồi (Retrieval Correct vs Incorrect)",
+        "file": "figures_rag/hinh_C_dung_sai_truy_hoi.png",
+        "description": "Khi CLIP tìm đúng ảnh, Qwen đạt 48.8% (ngang ngửa điều kiện lý tưởng 50.4%). Khi CLIP tìm sai ảnh, độ chính xác rơi thẳng đứng xuống 2.7%."
+    },
+    {
+        "id": "slake_closed_acc",
+        "title": "Hình 5: Minh chứng Nghịch lý CoT trên Câu hỏi Đóng Yes/No (SLAKE)",
+        "file": "figures/slake_closed_accuracy.png",
+        "description": "Standard CoT bị tụt điểm sâu từ 69.47% xuống 61.78% do overthinking. Adaptive CoT giải cứu điểm số vươn lên 71.15% (+9.37% so với CoT)."
+    },
+    {
+        "id": "slake_strict_medical",
+        "title": "Hình 6: So sánh Strict Exact Match vs Chuẩn hóa Ngữ nghĩa Y khoa",
+        "file": "figures/slake_strict_vs_medical_accuracy.png",
+        "description": "Độ chính xác chuẩn hóa ngữ nghĩa y khoa (Medical Semantic) phản ánh chính xác năng lực chẩn đoán, đưa Adaptive CoT đạt 57.68%."
+    }
+]
+
+# Write to demo_data.json
+final_dataset = {
+    "charxiv_cases": charxiv_cases,
+    "slake_cases": slake_cases,
+    "global_stats": global_stats,
+    "figures_registry": figures_registry
+}
+
+output_path = os.path.join(DEMO_DIR, "demo_data.json")
+with open(output_path, "w", encoding="utf-8") as f:
+    json.dump(final_dataset, f, ensure_ascii=False, indent=2)
+
+print(f"Đã xuất dữ liệu demo thành công vào: {output_path}")

@@ -22,6 +22,12 @@ slake_data/
 slake_vqa_rescored.csv
 rescore_slake_medical.py
 
+# Local Secrets / API Keys
+api_key.txt
+demo/api_key.txt
+.env
+.env.*
+
 # IDE
 .vscode/
 .idea/

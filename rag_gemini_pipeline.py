@@ -36,7 +36,7 @@ except ImportError:
 
 from charxiv_match import match_fixed
 
-MODEL_NAME = "gemini-2.5-flash"  # hoặc gemini-3.5-flash-lite
+MODEL_NAME = "gemini-3.5-flash-lite"
 SOURCE_RETRIEVAL_FILE = "rag_vqa_results_vitl14_letterbox_caption.csv"
 OUTPUT_FILE = "rag_vqa_gemini_results.csv"
 MAX_RETRIES = 5

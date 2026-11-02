@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ thống Hỏi Đáp Thị Giác VLM (VQA)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="gemini-layout">
+
+  <!-- Header Bar -->
+  <header class="gemini-header">
+    <div class="header-brand">
+      <span class="brand-title">Hỏi Đáp Thị Giác VLM</span>
+      <span class="brand-badge">Trực tiếp AI</span>
+    </div>
+
+    <!-- Mode Selector Navigation -->
+    <div class="mode-nav" id="modeNav">
+      <div class="mode-pill active" data-mode="adaptive" title="Adaptive CoT (Đề xuất)">
+        <span class="pill-name">Adaptive CoT</span>
+        <span class="pill-tag-rec">Đề xuất</span>
+        <span class="pill-acc">52.59% / 37.40%</span>
+      </div>
+      <div class="mode-pill" data-mode="no_cot" title="No-CoT (Trực tiếp)">
+        <span class="pill-name">No-CoT</span>
+        <span class="pill-tag">Trực tiếp</span>
+        <span class="pill-acc">50.24% / 38.80%</span>
+      </div>
+      <div class="mode-pill" data-mode="cot" title="Standard CoT (Từng bước)">
+        <span class="pill-name">Standard CoT</span>
+        <span class="pill-tag">Từng bước</span>
+        <span class="pill-acc">45.90% / 36.20%</span>
+      </div>
+    </div>
+
+    <button type="button" class="btn-new-chat" id="btnNewChat">
+      Cuộc trò chuyện mới
+    </button>
+  </header>
+
+  <!-- Main Chat Conversation View -->
+  <main class="chat-main" id="chatMain">
+    <div class="chat-scroll-area" id="chatScrollArea">
+
+      <!-- Welcome Empty State (Gemini style) -->
+      <div class="welcome-container" id="welcomeContainer">
+        <h1 class="welcome-heading">Hệ thống Hỏi Đáp Thị Giác VLM</h1>
+        <p class="welcome-sub">
+          Đầu vào: Hình ảnh và Câu hỏi &rarr; Đầu ra: Phân tích & Trả lời tự nhiên bằng mô hình VLM
+        </p>
+
+        <!-- Suggestion Prompt Cards -->
+        <div class="suggestion-grid" id="suggestionGrid">
+          <div class="suggestion-card" data-img="charxiv_all_images/validation/chart_00004.png" data-q="Giải thích nội dung của biểu đồ này">
+            <div class="sugg-category">Biểu đồ Khoa học (CharXiv)</div>
+            <div class="sugg-text">Giải thích nội dung của biểu đồ Covid này</div>
+          </div>
+
+          <div class="suggestion-card" data-img="charxiv_all_images/validation/chart_00014.png" data-q="Đối với biểu đồ con hopper:stand, giá trị episode return tối đa đạt được xấp xỉ ở thời điểm 10h là bao nhiêu?">
+            <div class="sugg-category">Tính toán Số học (CharXiv)</div>
+            <div class="sugg-text">Đo giá trị episode return tối đa của hopper:stand</div>
+          </div>
+
+          <div class="suggestion-card" data-img="imgs/xmlab124/source.jpg" data-q="Hình ảnh X-quang này có phát hiện bất thường hoặc tổn thương nào không?">
+            <div class="sugg-category">Y khoa SLAKE (Med-VQA)</div>
+            <div class="sugg-text">Hình ảnh X-quang phổi này có bất thường không?</div>
+          </div>
+
+          <div class="suggestion-card" data-img="imgs/xmlab102/source.jpg" data-q="Hình ảnh chụp cắt lớp vi tính này có chứa gan không?">
+            <div class="sugg-category">Y khoa SLAKE (Med-VQA)</div>
+            <div class="sugg-text">Ảnh chụp cắt lớp vi tính này có chứa gan không?</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Messages Container -->
+      <div class="messages-list" id="messagesList"></div>
+
+    </div>
+  </main>
+
+  <!-- Bottom Floating Chat Input Area (Gemini Docked Box) -->
+  <footer class="chat-footer">
+    <div class="input-container">
+
+      <!-- Attached Image Chip Preview -->
+      <div class="attachment-preview-bar" id="attachmentPreviewBar">
+        <div class="attach-chip" id="attachChip" title="Nhấn để xem ảnh phóng to">
+          <img id="attachThumb" src="/api/image?path=charxiv_all_images/validation/chart_00004.png" alt="Ảnh đính kèm" />
+          <span class="attach-name" id="attachName">Biểu đồ Covid (CharXiv)</span>
+          <span class="attach-view-hint">Xem ảnh</span>
+          <button type="button" class="btn-remove-attach" id="btnRemoveAttach" title="Bỏ chọn ảnh">×</button>
+        </div>
+        <div class="attach-hint">Ảnh đang được đính kèm vào cuộc trò chuyện</div>
+      </div>
+
+      <!-- Floating Input Capsule -->
+      <div class="input-capsule" id="inputCapsule">
+        <input type="file" id="fileInput" accept="image/*" style="display:none;" />
+
+        <button type="button" class="btn-attach" id="btnAttach" title="Tải ảnh từ máy tính (PNG, JPG)">
+          Đính kèm ảnh
+        </button>
+
+        <textarea 
+          id="promptInput" 
+          rows="1" 
+          placeholder="Nhập câu hỏi về hình ảnh... (Nhấn Enter để gửi, Shift+Enter để xuống dòng)"
+        ></textarea>
+
+        <button type="button" class="btn-send" id="btnSend" title="Gửi câu hỏi">
+          Gửi
+        </button>
+      </div>
+
+      <div class="footer-note">
+        Mô hình VLM phân tích trực tiếp điểm ảnh thời gian thực · Tỷ lệ đúng thực nghiệm: SLAKE 52.59% · CharXiv 37.40%
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal Xem Lại Ảnh Phóng To (Image Viewer Lightbox) -->
+  <div class="image-modal-backdrop" id="imageModal" style="display: none;">
+    <div class="image-modal-dialog">
+      <div class="image-modal-header">
+        <div class="image-modal-title-box">
+          <span class="image-modal-title" id="imageModalTitle">Xem hình ảnh chi tiết</span>
+          <span class="image-modal-sub" id="imageModalSub">Nhấp ra ngoài hoặc phím Esc để đóng</span>
+        </div>
+        <div class="image-modal-actions">
+          <button type="button" class="btn-modal-action" id="btnModalUseImage" title="Sử dụng lại hình ảnh này cho câu hỏi tiếp theo">
+            Dùng ảnh này
+          </button>
+          <button type="button" class="btn-modal-action" id="btnModalOpenTab" title="Mở ảnh trong tab trình duyệt mới">
+            Mở tab mới
+          </button>
+          <button type="button" class="btn-modal-close" id="btnModalClose" title="Đóng (Esc)">
+            ✕
+          </button>
+        </div>
+      </div>
+      <div class="image-modal-body">
+        <img id="imageModalImg" src="" alt="Hình ảnh phóng to" />
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

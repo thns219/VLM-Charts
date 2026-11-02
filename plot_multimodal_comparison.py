@@ -59,7 +59,7 @@ COLORS = {
 }
 
 LABELS = {
-    'Gemini': 'Gemini 2.5 Flash\n(Oracle / Closed API)',
+    'Gemini': 'Gemini 3.5 Flash Lite\n(Oracle / Closed API)',
     'Qwen_Direct': 'Qwen2.5-VL-7B\n(Direct Baseline)',
     'Standard_CoT': 'Standard CoT\n(2-Stage CoT)',
     'LoRA_CoT': 'LoRA CoT\n(Domain Grounded)',
@@ -253,7 +253,7 @@ for j, m in enumerate(four_models):
     vals = [data[m][data[m].sub_type == s].correct.mean() * 100 for s in subtypes]
     pos = x + (j - 1.5) * w
     short_labels = {
-        'Gemini': 'Gemini 2.5 Flash (Oracle)',
+        'Gemini': 'Gemini 3.5 Flash Lite (Oracle)',
         'Qwen_Direct': 'Qwen2.5-VL-7B (Direct)',
         'Standard_CoT': 'Standard CoT',
         'Adaptive_LoRA': 'Adaptive LoRA (Đề xuất)'
