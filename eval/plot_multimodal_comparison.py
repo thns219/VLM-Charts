@@ -19,11 +19,18 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(HERE) if os.path.basename(HERE) == "eval" else HERE
+
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
 from charxiv_match import match_fixed
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = HERE
-OUT_DIR = os.path.join(HERE, 'figures')
+DATA_DIR = os.path.join(ROOT_DIR, 'results') if os.path.exists(os.path.join(ROOT_DIR, 'results')) else HERE
+OUT_DIR = os.path.join(ROOT_DIR, 'figures')
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # -------------------------------------------------------------

@@ -27,8 +27,10 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-CSV_PRIMARY = os.path.join(HERE, "slake_vqa_results.csv")
-OUT_DIR = os.path.join(HERE, "figures")
+ROOT_DIR = os.path.dirname(HERE) if os.path.basename(HERE) == "eval" else HERE
+RESULTS_DIR = os.path.join(ROOT_DIR, "results") if os.path.exists(os.path.join(ROOT_DIR, "results")) else HERE
+CSV_PRIMARY = os.path.join(RESULTS_DIR, "slake_vqa_results.csv")
+OUT_DIR = os.path.join(ROOT_DIR, "figures")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # -------------------------------------------------------------

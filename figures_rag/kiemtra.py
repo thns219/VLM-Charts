@@ -3,14 +3,21 @@ import os
 import sys
 import pandas as pd
 
-# Cho phép import charxiv_match từ thư mục gốc
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+_eval_dir = os.path.join(ROOT_DIR, "eval")
+if _eval_dir not in sys.path:
+    sys.path.insert(0, _eval_dir)
+
 try:
     from charxiv_match import match_fixed
 except ImportError:
     match_fixed = None
 
-CSV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "rag_vqa_results_vitl14_letterbox.csv")
+CSV_PATH = os.path.join(ROOT_DIR, "results", "rag_vqa_results_vitl14_letterbox.csv")
+if not os.path.exists(CSV_PATH):
+    CSV_PATH = os.path.join(ROOT_DIR, "rag_vqa_results_vitl14_letterbox.csv")
 d = pd.read_csv(CSV_PATH, keep_default_na=False)
 n_dup = int(d.duplicated(subset=["chart_index", "slot"]).sum())
 if n_dup:

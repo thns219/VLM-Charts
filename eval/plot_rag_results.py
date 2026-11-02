@@ -37,6 +37,14 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(HERE) if os.path.basename(HERE) == "eval" else HERE
+
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
+
 # Chấm lại bằng match_fixed (cùng hàm với báo cáo) nếu có charxiv_match.py cùng thư mục.
 try:
     from charxiv_match import match_fixed
@@ -45,8 +53,8 @@ except ImportError:
     print("CẢNH BÁO: không thấy charxiv_match.py -> dùng cột 'correct' có sẵn trong CSV "
           "(do simple_match chấm, có thể lệch với số trong báo cáo).")
 
-DATA_DIR = "."
-OUT_DIR = "figures_rag"
+DATA_DIR = os.path.join(ROOT_DIR, "results") if os.path.exists(os.path.join(ROOT_DIR, "results")) else HERE
+OUT_DIR = os.path.join(ROOT_DIR, "figures_rag")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 VQA_FILES = [
