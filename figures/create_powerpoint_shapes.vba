@@ -1,7 +1,7 @@
 ' ==============================================================================
-' MACRO VẼ SƠ ĐỒ HỆ THỐNG ADAPTIVE-VLM-CHARTS CHUẨN 1:1 THEO HÌNH MẪU GỐC
-' Không thay đổi cấu trúc, giữ nguyên 3 pipeline, các khối, mũi tên và ví dụ minh họa
-' 
+' MACRO VẼ SƠ ĐỒ HỆ THỐNG ADAPTIVE-VLM-CHARTS CHUẨN 1:1 THEO THIẾT KẾ MỚI NHẤT
+' Tự động tạo Native Shapes trong PowerPoint, cho phép chỉnh sửa từng chữ, từng hộp, từng mũi tên.
+'
 ' CÁCH DÙNG TRONG POWERPOINT:
 ' 1. Mở PowerPoint -> Tạo Blank Presentation.
 ' 2. Nhấn Alt + F11 (mở cửa sổ VBA).
@@ -9,11 +9,10 @@
 ' 4. Dán toàn bộ mã này vào và nhấn F5 (Run).
 ' ==============================================================================
 
-Sub DrawOriginalAdaptiveVLMChartsDiagram()
+Sub DrawExactAdaptiveVLMChartsArchitecture()
     Dim pptPres As PowerPoint.Presentation
     Dim sld As PowerPoint.Slide
     Dim shp As PowerPoint.Shape
-    Dim conn As PowerPoint.Shape
     
     Set pptPres = ActivePresentation
     ' Khổ chuẩn 16:9 (960 x 540 pt)
@@ -24,385 +23,600 @@ Sub DrawOriginalAdaptiveVLMChartsDiagram()
     sld.Background.Fill.Solid
     sld.Background.Fill.ForeColor.RGB = RGB(255, 255, 255)
     
-    ' -------------------------------------------------------------
+    ' ==========================================================================
     ' 1. PANEL 1 (BÊN TRÁI): INPUT PIPELINE
-    ' -------------------------------------------------------------
-    ' Khung bao Panel 1
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 15, 15, 275, 415)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(248, 250, 252)
-    shp.Line.ForeColor.RGB = RGB(203, 213, 225)
-    shp.Line.Weight = 1.2
-    
-    ' Header Panel 1
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 25, 22, 255, 26)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(226, 232, 240)
-    shp.Line.ForeColor.RGB = RGB(203, 213, 225)
-    shp.TextFrame.TextRange.Text = "Adaptive-VLM-Charts: input pipeline"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 10.5
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.Font.Color.RGB = RGB(30, 41, 59)
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
-    
-    ' Khối: Bộ dữ liệu CQA (Scientific Chart / SLAKE)
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 35, 58, 235, 40)
+    ' ==========================================================================
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 15, 12, 260, 480)
     shp.Fill.Solid
     shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
-    shp.Line.ForeColor.RGB = RGB(148, 163, 184)
-    shp.TextFrame.TextRange.Text = "Bộ dữ liệu CQA" & vbCrLf & "(Scientific Chart / SLAKE)"
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    shp.Line.Weight = 1.3
+    
+    ' Header Panel 1
+    Set shp = sld.Shapes.AddShape(msoShapeRectangle, 20, 16, 250, 22)
+    shp.Fill.Transparency = 1
+    shp.Line.Visible = msoFalse
+    shp.TextFrame.TextRange.Text = "Adaptive-VLM-Charts: input pipeline"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Font.Size = 10
+    shp.TextFrame.TextRange.Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Font.Color.RGB = RGB(15, 23, 42)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    ' Khối: Bộ dữ liệu (CharXiv / SLAKE)
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 28, 42, 234, 40)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(224, 242, 254)
+    shp.Line.ForeColor.RGB = RGB(56, 189, 248)
+    shp.TextFrame.TextRange.Text = "Bộ dữ liệu" & vbCrLf & "(CharXiv / SLAKE)"
     shp.TextFrame.TextRange.Font.Name = "Arial"
     shp.TextFrame.TextRange.Lines(1).Font.Size = 9.5
     shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
     shp.TextFrame.TextRange.Lines(2).Font.Size = 8
+    shp.TextFrame.TextRange.Lines(2).Font.Color.RGB = RGB(51, 65, 85)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    ' Mũi tên xuống Mẫu đầu vào
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 145, 82, 145, 96)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
+    
+    ' Khối: Mẫu đầu vào: (I, Q), I hoặc Q
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 28, 98, 234, 116)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "Mẫu đầu vào: (I, Q), I hoặc Q"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Font.Size = 8.8
+    shp.TextFrame.TextRange.Font.Bold = msoTrue
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    shp.TextFrame.VerticalAnchor = msoAnchorTop
+    
+    ' Ô con: Image I (tùy chọn) - Nét đứt
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 38, 124, 94, 38)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(71, 85, 105)
+    shp.Line.DashStyle = msoLineDash
+    shp.TextFrame.TextRange.Text = "Image I" & vbCrLf & "(tùy chọn)"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 8.5
+    shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(2).Font.Size = 7.2
+    shp.TextFrame.TextRange.Lines(2).Font.Italic = msoTrue
     shp.TextFrame.TextRange.Lines(2).Font.Color.RGB = RGB(100, 116, 139)
     shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
     
-    ' Khối: Mẫu đầu vào (I, Q)
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 35, 116, 235, 62)
+    ' Ô con: Question Q (tùy chọn) - Nét đứt
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 38, 168, 94, 38)
     shp.Fill.Solid
     shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
-    shp.Line.ForeColor.RGB = RGB(148, 163, 184)
-    shp.TextFrame.TextRange.Text = "Mẫu đầu vào (I, Q)"
+    shp.Line.ForeColor.RGB = RGB(71, 85, 105)
+    shp.Line.DashStyle = msoLineDash
+    shp.TextFrame.TextRange.Text = "Question Q" & vbCrLf & "(tùy chọn)"
     shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 9
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 8.5
+    shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(2).Font.Size = 7.2
+    shp.TextFrame.TextRange.Lines(2).Font.Italic = msoTrue
+    shp.TextFrame.TextRange.Lines(2).Font.Color.RGB = RGB(100, 116, 139)
     shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
     
-    ' Ô con: Image I & Question Q
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 48, 140, 100, 30)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(241, 245, 249)
-    shp.Line.ForeColor.RGB = RGB(148, 163, 184)
-    shp.TextFrame.TextRange.Text = "Image I"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 8.5
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
-    
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 158, 140, 100, 30)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(241, 245, 249)
-    shp.Line.ForeColor.RGB = RGB(148, 163, 184)
-    shp.TextFrame.TextRange.Text = "Question Q"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 8.5
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
-    
-    ' Khối: Phân loại D1-D4, R1-R4
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 55, 192, 195, 28)
+    ' Ô con: Phân loại D1-D4 / R1-R4
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 150, 124, 100, 82)
     shp.Fill.Solid
     shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
-    shp.Line.ForeColor.RGB = RGB(148, 163, 184)
-    shp.TextFrame.TextRange.Text = "Phân loại      D1–D4       R1–R4"
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "Phân loại" & vbCrLf & vbCrLf & "D1–D4" & vbCrLf & "R1–R4"
     shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 8.5
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 8.5
+    shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(3).Font.Size = 8
+    shp.TextFrame.TextRange.Lines(3).Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(4).Font.Size = 8
+    shp.TextFrame.TextRange.Lines(4).Font.Bold = msoTrue
     shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
     
-    ' Khối biểu đồ mini
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 35, 232, 235, 185)
+    ' Khung nét đứt cam/vàng chứa Biểu đồ
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 28, 226, 234, 254)
     shp.Fill.Solid
     shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
-    shp.Line.ForeColor.RGB = RGB(203, 213, 225)
-    shp.TextFrame.TextRange.Text = "■ xanh (Right)   □ vàng (Centre)"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 8.5
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
-    
-    ' Ô câu hỏi trong biểu đồ
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 45, 345, 215, 60)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(254, 243, 199)
     shp.Line.ForeColor.RGB = RGB(245, 158, 11)
-    shp.TextFrame.TextRange.Text = "Question: Hiệu giữa tổng các cột xanh và tổng các cột vàng là bao nhiêu?"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 8
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.Font.Color.RGB = RGB(146, 64, 14)
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
-    
-    ' -------------------------------------------------------------
-    ' 2. PANEL 2 (Ở GIỮA): RETRIEVAL & REASONING PIPELINE
-    ' -------------------------------------------------------------
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 305, 15, 385, 415)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(248, 250, 252)
-    shp.Line.ForeColor.RGB = RGB(203, 213, 225)
+    shp.Line.DashStyle = msoLineDash
     shp.Line.Weight = 1.2
     
-    ' Header Panel 2
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 315, 22, 365, 26)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(226, 232, 240)
-    shp.Line.ForeColor.RGB = RGB(203, 213, 225)
-    shp.TextFrame.TextRange.Text = "Adaptive-VLM-Charts: retrieval & reasoning pipeline"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 10.5
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.Font.Color.RGB = RGB(30, 41, 59)
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    ' Biểu đồ Bar chart mini
+    ' Cột 1
+    Set shp = sld.Shapes.AddShape(msoShapeRectangle, 65, 375, 18, 50)
+    shp.Fill.ForeColor.RGB = RGB(37, 99, 235)
+    shp.Line.Visible = msoFalse
+    Set shp = sld.Shapes.AddShape(msoShapeRectangle, 85, 395, 18, 30)
+    shp.Fill.ForeColor.RGB = RGB(251, 191, 36)
+    shp.Line.ForeColor.RGB = RGB(217, 119, 6)
     
-    ' Khối: Input (I, Q)
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 325, 60, 95, 40)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    ' Cột 2
+    Set shp = sld.Shapes.AddShape(msoShapeRectangle, 125, 345, 18, 80)
+    shp.Fill.ForeColor.RGB = RGB(37, 99, 235)
+    shp.Line.Visible = msoFalse
+    Set shp = sld.Shapes.AddShape(msoShapeRectangle, 145, 360, 18, 65)
+    shp.Fill.ForeColor.RGB = RGB(251, 191, 36)
+    shp.Line.ForeColor.RGB = RGB(217, 119, 6)
+    
+    ' Cột 3
+    Set shp = sld.Shapes.AddShape(msoShapeRectangle, 185, 385, 18, 40)
+    shp.Fill.ForeColor.RGB = RGB(37, 99, 235)
+    shp.Line.Visible = msoFalse
+    Set shp = sld.Shapes.AddShape(msoShapeRectangle, 205, 400, 18, 25)
+    shp.Fill.ForeColor.RGB = RGB(251, 191, 36)
+    shp.Line.ForeColor.RGB = RGB(217, 119, 6)
+    
+    ' Trục x
+    Set shp = sld.Shapes.AddLine(50, 425, 238, 425)
     shp.Line.ForeColor.RGB = RGB(148, 163, 184)
-    shp.TextFrame.TextRange.Text = "Input" & vbCrLf & "(I, Q)"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 9
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    shp.Line.Weight = 1.1
     
-    ' Khung nét đứt: Hybrid RAG
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 445, 55, 235, 115)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(250, 245, 255)
-    shp.Line.ForeColor.RGB = RGB(124, 58, 237)
-    shp.Line.DashStyle = msoLineDash
-    shp.TextFrame.TextRange.Text = "Hybrid RAG"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 9.5
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.Font.Color.RGB = RGB(124, 58, 237)
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignLeft
-    
-    ' Con trong Hybrid RAG: ChromaDB, CLIP, BM25
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 460, 78, 205, 30)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
-    shp.Line.ForeColor.RGB = RGB(192, 132, 252)
-    shp.TextFrame.TextRange.Text = "ChromaDB"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 8.5
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
-    
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 460, 115, 100, 45)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
-    shp.Line.ForeColor.RGB = RGB(192, 132, 252)
-    shp.TextFrame.TextRange.Text = "CLIP ViT-L/14" & vbCrLf & "(Letterbox)"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 8
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
-    
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 565, 115, 100, 45)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
-    shp.Line.ForeColor.RGB = RGB(192, 132, 252)
-    shp.TextFrame.TextRange.Text = "BM25" & vbCrLf & "Caption"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 8
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
-    
-    ' Ô Prompt D
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 520, 185, 85, 28)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(254, 249, 195)
-    shp.Line.ForeColor.RGB = RGB(234, 179, 8)
-    shp.TextFrame.TextRange.Text = "Prompt D"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 8.5
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.Font.Color.RGB = RGB(133, 77, 14)
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
-    
-    ' Đường Oracle / Direct Bypass
-    Set shp = sld.Shapes.AddShape(msoShapeRectangle, 325, 145, 110, 20)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(240, 253, 250)
-    shp.Line.ForeColor.RGB = RGB(13, 148, 136)
-    shp.TextFrame.TextRange.Text = "Oracle / Direct Bypass"
+    ' Câu hỏi dưới biểu đồ
+    Set shp = sld.Shapes.AddShape(msoShapeRectangle, 32, 435, 226, 38)
+    shp.Fill.Transparency = 1
+    shp.Line.Visible = msoFalse
+    shp.TextFrame.TextRange.Text = "Question: Hiệu giữa tổng các cột xanh và tổng các cột vàng là bao nhiêu?"
     shp.TextFrame.TextRange.Font.Name = "Arial"
     shp.TextFrame.TextRange.Font.Size = 7.5
     shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.Font.Color.RGB = RGB(13, 148, 136)
+    shp.TextFrame.TextRange.Font.Color.RGB = RGB(15, 23, 42)
     shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
     
-    ' Khối VLM Qwen2.5-VL-7B
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 325, 230, 345, 185)
+    ' ==========================================================================
+    ' 2. PANEL 2 (TRÊN PHẢI): RETRIEVAL, ROUTING & REASONING PIPELINE
+    ' ==========================================================================
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 290, 12, 655, 240)
     shp.Fill.Solid
     shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
-    shp.Line.ForeColor.RGB = RGB(148, 163, 184)
-    shp.TextFrame.TextRange.Text = "VLM" & vbCrLf & "Qwen2.5-VL-7B"
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    shp.Line.Weight = 1.3
+    
+    ' Header Panel 2
+    Set shp = sld.Shapes.AddShape(msoShapeRectangle, 310, 16, 615, 22)
+    shp.Fill.Transparency = 1
+    shp.Line.Visible = msoFalse
+    shp.TextFrame.TextRange.Text = "Adaptive-VLM-Charts: retrieval, routing & reasoning pipeline"
     shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Lines(1).Font.Size = 10.5
+    shp.TextFrame.TextRange.Font.Size = 10
+    shp.TextFrame.TextRange.Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Font.Color.RGB = RGB(15, 23, 42)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    ' Mũi tên từ Panel 1 sang Panel 2
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 262, 156, 305, 96)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
+    
+    ' Khối: Input I và/hoặc Q
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 305, 72, 58, 48)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "Input" & vbCrLf & "I và/hoặc Q"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 8.5
     shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
-    shp.TextFrame.TextRange.Lines(2).Font.Size = 8.5
-    shp.TextFrame.TextRange.Lines(2).Font.Color.RGB = RGB(100, 116, 139)
+    shp.TextFrame.TextRange.Lines(2).Font.Size = 7.2
+    shp.TextFrame.TextRange.Lines(2).Font.Color.RGB = RGB(51, 65, 85)
     shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
     
-    ' 3 chế độ con
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 345, 280, 305, 30)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(248, 250, 252)
-    shp.Line.ForeColor.RGB = RGB(203, 213, 225)
-    shp.TextFrame.TextRange.Text = "(a) Direct Zero-Shot"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 8.5
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    ' Đường Oracle Bypass (nét đứt)
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 334, 72, 334, 46)
+    shp.Line.ForeColor.RGB = RGB(51, 65, 85)
+    shp.Line.DashStyle = msoLineDash
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 334, 46, 545, 46)
+    shp.Line.ForeColor.RGB = RGB(51, 65, 85)
+    shp.Line.DashStyle = msoLineDash
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 545, 46, 545, 76)
+    shp.Line.ForeColor.RGB = RGB(51, 65, 85)
+    shp.Line.DashStyle = msoLineDash
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
     
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 345, 320, 305, 30)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(248, 250, 252)
-    shp.Line.ForeColor.RGB = RGB(203, 213, 225)
-    shp.TextFrame.TextRange.Text = "(b) Standard CoT (2-stage)"
+    Set shp = sld.Shapes.AddShape(msoShapeRectangle, 345, 30, 190, 16)
+    shp.Fill.Transparency = 1
+    shp.Line.Visible = msoFalse
+    shp.TextFrame.TextRange.Text = "Oracle (cận trên) / Direct Bypass"
     shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 8.5
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
-    
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 345, 360, 305, 38)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(255, 247, 237)
-    shp.Line.ForeColor.RGB = RGB(234, 88, 12)
-    shp.Line.Weight = 1.4
-    shp.TextFrame.TextRange.Text = "(c) Adaptive LoRA CoT (Đề xuất)"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 9
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.Font.Color.RGB = RGB(234, 88, 12)
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
-    
-    ' -------------------------------------------------------------
-    ' 3. PANEL 3 (BÊN PHẢI): EVALUATION PIPELINE
-    ' -------------------------------------------------------------
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 705, 15, 240, 415)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(248, 250, 252)
-    shp.Line.ForeColor.RGB = RGB(203, 213, 225)
-    shp.Line.Weight = 1.2
-    
-    ' Header Panel 3
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 715, 22, 220, 26)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(226, 232, 240)
-    shp.Line.ForeColor.RGB = RGB(203, 213, 225)
-    shp.TextFrame.TextRange.Text = "Adaptive-VLM-Charts: evaluation pipeline"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 10.5
+    shp.TextFrame.TextRange.Font.Size = 7.5
+    shp.TextFrame.TextRange.Font.Italic = msoTrue
     shp.TextFrame.TextRange.Font.Bold = msoTrue
     shp.TextFrame.TextRange.Font.Color.RGB = RGB(30, 41, 59)
     shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
     
-    ' Rationale R & Answer A
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 735, 60, 180, 28)
+    ' Mũi tên từ Input vào Hybrid RAG
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 363, 96, 385, 96)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
+    
+    ' Khối: Hybrid RAG
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 385, 46, 115, 114)
     shp.Fill.Solid
     shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
-    shp.Line.ForeColor.RGB = RGB(148, 163, 184)
-    shp.TextFrame.TextRange.Text = "Rationale R"
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "Hybrid RAG" & vbCrLf & _
+                                   "ChromaDB" & vbCrLf & _
+                                   "CLIP ViT-L/14" & vbCrLf & _
+                                   "(Letterbox)" & vbCrLf & _
+                                   "BM25 Caption" & vbCrLf & _
+                                   "(Query: text Q/I)"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 8.5
+    shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(2).Font.Size = 7.5
+    shp.TextFrame.TextRange.Lines(3).Font.Size = 7.5
+    shp.TextFrame.TextRange.Lines(4).Font.Size = 7
+    shp.TextFrame.TextRange.Lines(4).Font.Color.RGB = RGB(100, 116, 139)
+    shp.TextFrame.TextRange.Lines(5).Font.Size = 7.5
+    shp.TextFrame.TextRange.Lines(6).Font.Size = 6.8
+    shp.TextFrame.TextRange.Lines(6).Font.Italic = msoTrue
+    shp.TextFrame.TextRange.Lines(6).Font.Color.RGB = RGB(100, 116, 139)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    ' Mũi tên từ RAG vào Prompt D
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 500, 96, 520, 96)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
+    
+    ' Khối: Prompt D
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 520, 76, 50, 44)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "Prompt" & vbCrLf & "D"
     shp.TextFrame.TextRange.Font.Name = "Arial"
     shp.TextFrame.TextRange.Font.Size = 8.5
     shp.TextFrame.TextRange.Font.Bold = msoTrue
     shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
     
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 735, 100, 180, 32)
-    shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
-    shp.Line.ForeColor.RGB = RGB(148, 163, 184)
-    shp.TextFrame.TextRange.Text = "Answer A"
-    shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 9
-    shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    ' Mũi tên từ Prompt D vào Router
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 570, 96, 590, 96)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
     
-    ' Khối 1: Chuẩn hóa (Normalization)
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 735, 140, 180, 60)
+    ' Khối: Lightweight Classifier & Dynamic Router
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 590, 46, 130, 114)
     shp.Fill.Solid
     shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
-    shp.Line.ForeColor.RGB = RGB(148, 163, 184)
-    shp.TextFrame.TextRange.Text = "Chuẩn hóa (Normalization)" & vbCrLf & _
-                                   "• Word-to-Number   • Bỏ LaTeX" & vbCrLf & _
-                                   "• Medical Semantic Normalization"
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.Line.Weight = 1.2
+    shp.TextFrame.TextRange.Text = "Lightweight Classifier" & vbCrLf & _
+                                   "& Dynamic Router" & vbCrLf & _
+                                   "Input: câu hỏi Q (trong D)" & vbCrLf & _
+                                   "A -> Visual / Label reading" & vbCrLf & _
+                                   "(hoặc Image-only)" & vbCrLf & _
+                                   "B -> Numerical / Arithmetic"
     shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Lines(1).Font.Size = 9
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 8
     shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
     shp.TextFrame.TextRange.Lines(2).Font.Size = 8
-    shp.TextFrame.TextRange.Lines(3).Font.Size = 7.5
+    shp.TextFrame.TextRange.Lines(2).Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(3).Font.Size = 6.8
     shp.TextFrame.TextRange.Lines(3).Font.Color.RGB = RGB(100, 116, 139)
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignLeft
+    shp.TextFrame.TextRange.Lines(4).Font.Size = 7
+    shp.TextFrame.TextRange.Lines(4).Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(4).Font.Color.RGB = RGB(13, 148, 136)
+    shp.TextFrame.TextRange.Lines(5).Font.Size = 6.5
+    shp.TextFrame.TextRange.Lines(5).Font.Italic = msoTrue
+    shp.TextFrame.TextRange.Lines(5).Font.Color.RGB = RGB(13, 148, 136)
+    shp.TextFrame.TextRange.Lines(6).Font.Size = 7
+    shp.TextFrame.TextRange.Lines(6).Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(6).Font.Color.RGB = RGB(194, 65, 12)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
     
-    ' Khối 2: Đánh giá CharXiv (Khớp mẫu & Số học)
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 735, 208, 180, 105)
+    ' Khung nét đứt cam: VLM Reasoning Engine
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 735, 30, 136, 178)
     shp.Fill.Solid
     shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
-    shp.Line.ForeColor.RGB = RGB(37, 99, 235)
+    shp.Line.ForeColor.RGB = RGB(245, 158, 11)
+    shp.Line.DashStyle = msoLineDash
     shp.Line.Weight = 1.2
-    shp.TextFrame.TextRange.Text = "Đánh giá CharXiv (Khớp mẫu & Số học)" & vbCrLf & _
-                                   "match_fixed (±5%)  |  Bootstrap 95% CI" & vbCrLf & _
-                                   "Phân rã theo 4 nhóm câu hỏi:" & vbCrLf & _
-                                   "• Number-in-Chart   • Number-in-Gen" & vbCrLf & _
-                                   "• Text-in-Chart       • Text-in-Gen"
+    shp.TextFrame.TextRange.Text = "VLM Reasoning Engine" & vbCrLf & "(Qwen2.5-VL-7B)"
     shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Lines(1).Font.Size = 8.5
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 8
     shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
-    shp.TextFrame.TextRange.Lines(1).Font.Color.RGB = RGB(29, 78, 216)
-    shp.TextFrame.TextRange.Lines(2).Font.Size = 7.5
-    shp.TextFrame.TextRange.Lines(2).Font.Bold = msoTrue
-    shp.TextFrame.TextRange.Lines(2).Font.Color.RGB = RGB(30, 64, 175)
+    shp.TextFrame.TextRange.Lines(2).Font.Size = 7.2
+    shp.TextFrame.TextRange.Lines(2).Font.Color.RGB = RGB(100, 116, 139)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    shp.TextFrame.VerticalAnchor = msoAnchorTop
+    
+    ' (a) Direct Zero-Shot
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 745, 62, 116, 36)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "(a) Direct Zero-Shot" & vbCrLf & "bypass CoT"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 7.8
+    shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(2).Font.Size = 6.8
+    shp.TextFrame.TextRange.Lines(2).Font.Color.RGB = RGB(100, 116, 139)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    ' (b) Standard CoT (nét đứt)
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 745, 106, 116, 36)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(100, 116, 139)
+    shp.Line.DashStyle = msoLineDash
+    shp.TextFrame.TextRange.Text = "(b) Standard CoT" & vbCrLf & "baseline (không routing)"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 7.5
+    shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(1).Font.Color.RGB = RGB(71, 85, 105)
+    shp.TextFrame.TextRange.Lines(2).Font.Size = 6.8
+    shp.TextFrame.TextRange.Lines(2).Font.Color.RGB = RGB(100, 116, 139)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    ' (c) Adaptive LoRA CoT (nền vàng cam)
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 745, 150, 116, 46)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(254, 243, 199)
+    shp.Line.ForeColor.RGB = RGB(217, 119, 6)
+    shp.Line.Weight = 1.2
+    shp.TextFrame.TextRange.Text = "(c) Adaptive LoRA CoT" & vbCrLf & "3-stage alignment"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 7.8
+    shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(1).Font.Color.RGB = RGB(154, 52, 18)
+    shp.TextFrame.TextRange.Lines(2).Font.Size = 6.8
+    shp.TextFrame.TextRange.Lines(2).Font.Color.RGB = RGB(154, 52, 18)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    ' Mũi tên từ Router rẽ vào VLM
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 720, 80, 745, 80)
+    shp.Line.ForeColor.RGB = RGB(13, 148, 136)
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 720, 130, 745, 170)
+    shp.Line.ForeColor.RGB = RGB(194, 65, 12)
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
+    
+    ' Khối: Unified Output
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 885, 68, 52, 90)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "Unified Output" & vbCrLf & vbCrLf & "Answer A" & vbCrLf & "(* Rationale R" & vbCrLf & "nếu có)"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 7.5
+    shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
     shp.TextFrame.TextRange.Lines(3).Font.Size = 7.5
     shp.TextFrame.TextRange.Lines(3).Font.Bold = msoTrue
-    shp.TextFrame.TextRange.Lines(4).Font.Size = 7.5
-    shp.TextFrame.TextRange.Lines(5).Font.Size = 7.5
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignLeft
+    shp.TextFrame.TextRange.Lines(4).Font.Size = 6.5
+    shp.TextFrame.TextRange.Lines(4).Font.Color.RGB = RGB(100, 116, 139)
+    shp.TextFrame.TextRange.Lines(5).Font.Size = 6.5
+    shp.TextFrame.TextRange.Lines(5).Font.Color.RGB = RGB(100, 116, 139)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
     
-    ' Khối 3: Đánh giá SLAKE (Y khoa & Sinh NLG)
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 735, 321, 180, 94)
+    ' Mũi tên hội tụ về Unified Output
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 861, 80, 885, 100)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 861, 124, 885, 115)
+    shp.Line.ForeColor.RGB = RGB(100, 116, 139)
+    shp.Line.DashStyle = msoLineDash
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 861, 170, 885, 130)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
+    
+    ' ==========================================================================
+    ' 3. PANEL 3 (DƯỚI PHẢI): EVALUATION PIPELINE
+    ' ==========================================================================
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 290, 260, 655, 232)
     shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(240, 253, 244)
-    shp.Line.ForeColor.RGB = RGB(22, 163, 74)
-    shp.Line.Weight = 1.2
-    shp.TextFrame.TextRange.Text = "Đánh giá SLAKE (Y khoa & Sinh NLG)" & vbCrLf & _
-                                   "• Closed: Strict Accuracy & Medical Acc" & vbCrLf & _
-                                   "• Open NLG: BLEU-1, 2  |  ROUGE-1, L" & vbCrLf & _
-                                   "• Strict EM & Medical Semantic Acc"
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    shp.Line.Weight = 1.3
+    
+    ' Header Panel 3
+    Set shp = sld.Shapes.AddShape(msoShapeRectangle, 310, 264, 615, 22)
+    shp.Fill.Transparency = 1
+    shp.Line.Visible = msoFalse
+    shp.TextFrame.TextRange.Text = "Adaptive-VLM-Charts: evaluation pipeline"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Font.Size = 10
+    shp.TextFrame.TextRange.Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Font.Color.RGB = RGB(15, 23, 42)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    ' Mũi tên từ Unified Output chạy xuống Panel 3
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 911, 158, 911, 235)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 911, 235, 340, 235)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 340, 235, 340, 315)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
+    
+    ' Khối: Answer A (+ Rationale R)
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 305, 315, 70, 55)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "Answer A" & vbCrLf & "(+ Rationale R)"
     shp.TextFrame.TextRange.Font.Name = "Arial"
     shp.TextFrame.TextRange.Lines(1).Font.Size = 8.5
     shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
-    shp.TextFrame.TextRange.Lines(1).Font.Color.RGB = RGB(21, 128, 61)
+    shp.TextFrame.TextRange.Lines(2).Font.Size = 7.2
+    shp.TextFrame.TextRange.Lines(2).Font.Color.RGB = RGB(100, 116, 139)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    ' Mũi tên sang Chuẩn hóa
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 375, 342, 395, 342)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
+    
+    ' Khối: Chuẩn hóa
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 395, 300, 105, 85)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "Chuẩn hóa" & vbCrLf & _
+                                   "Word-to-Number" & vbCrLf & _
+                                   "Bỏ LaTeX" & vbCrLf & _
+                                   "Medical Synonyms"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 8.5
+    shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
     shp.TextFrame.TextRange.Lines(2).Font.Size = 7.5
-    shp.TextFrame.TextRange.Lines(3).Font.Size = 7.8
-    shp.TextFrame.TextRange.Lines(3).Font.Bold = msoTrue
-    shp.TextFrame.TextRange.Lines(3).Font.Color.RGB = RGB(21, 128, 61)
+    shp.TextFrame.TextRange.Lines(3).Font.Size = 7.5
     shp.TextFrame.TextRange.Lines(4).Font.Size = 7.2
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignLeft
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    ' Mũi tên sang CharXiv & SLAKE
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 500, 342, 515, 342)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 515, 342, 515, 315)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 515, 315, 530, 315)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
+    
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 515, 342, 515, 435)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 515, 435, 530, 435)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
     
     ' -------------------------------------------------------------
-    ' 4. HỘP VÍ DỤ MINH HỌA PHÍA DƯỚI (BOTTOM EXEMPLAR)
+    ' Khung CharXiv: Chấm điểm theo 4 nhóm câu hỏi
     ' -------------------------------------------------------------
-    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 15, 440, 930, 48)
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 530, 290, 400, 105)
     shp.Fill.Solid
-    shp.Fill.ForeColor.RGB = RGB(254, 252, 232)
-    shp.Line.ForeColor.RGB = RGB(234, 179, 8)
-    shp.Line.Weight = 1.2
-    shp.TextFrame.TextRange.Text = "Ví dụ Adaptive LoRA CoT: Step 1 (Target): cột xanh = nhãn ""Right"", cột vàng = nhãn ""Centre"". " & _
-                                   "Step 2 (Grounding): xanh = 32 + 38 + 30 = 100; vàng = 55 + 27 + 18 = 100. " & _
-                                   "Step 3 (Deduction): 100 − 100 = 0.  Answer: 0"
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "CharXiv (biểu đồ khoa học): chấm điểm theo 4 nhóm câu hỏi"
     shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 8.5
+    shp.TextFrame.TextRange.Font.Size = 8
     shp.TextFrame.TextRange.Font.Bold = msoTrue
-    shp.TextFrame.TextRange.Font.Color.RGB = RGB(133, 77, 14)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    shp.TextFrame.VerticalAnchor = msoAnchorTop
+    
+    ' match_fixed / Bootstrap 95% CI
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 540, 316, 110, 68)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "match_fixed" & vbCrLf & "Bootstrap 95% CI"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 8
+    shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(2).Font.Size = 7.2
+    shp.TextFrame.TextRange.Lines(2).Font.Color.RGB = RGB(100, 116, 139)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    ' Mũi tên từ match_fixed sang 4 nhóm
+    Set shp = sld.Shapes.AddConnector(msoConnectorStraight, 650, 350, 670, 350)
+    shp.Line.ForeColor.RGB = RGB(15, 23, 42)
+    shp.Line.EndArrowheadStyle = msoArrowheadTriangle
+    
+    ' 4 ô con nhóm câu hỏi: Text-in-Chart, Text-in-General, Number-in-Chart, Number-in-General
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 675, 318, 115, 30)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "Text-in-Chart"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Font.Size = 7.5
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 800, 318, 115, 30)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "Text-in-General"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Font.Size = 7.5
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 675, 354, 115, 30)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "Number-in-Chart"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Font.Size = 7.5
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 800, 354, 115, 30)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "Number-in-General"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Font.Size = 7.5
     shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
     
     ' -------------------------------------------------------------
-    ' 5. CAPTION BÀI BÁO TẠP CHÍ
+    ' Khung SLAKE: Accuracy & NLG
     ' -------------------------------------------------------------
-    Set shp = sld.Shapes.AddTextbox(msoTextOrientationHorizontal, 15, 495, 930, 30)
-    shp.TextFrame.TextRange.Text = "Hình 1. Tổng quan hệ thống Adaptive-VLM-Charts. Pipeline đầu vào tạo mẫu (I, Q); pipeline truy hồi & lập luận kết hợp Hybrid RAG " & _
-                                   "với ba chế độ suy luận của VLM (đường Oracle đi thẳng vào prompt); pipeline đánh giá chuẩn hóa đáp án, chấm điểm match_fixed (CharXiv) " & _
-                                   "và đánh giá độ đo sinh ngôn ngữ BLEU-1, BLEU-2, ROUGE-1, ROUGE-L (SLAKE Med-VQA)."
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 530, 404, 400, 78)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "SLAKE (Y khoa): Accuracy & NLG"
     shp.TextFrame.TextRange.Font.Name = "Arial"
-    shp.TextFrame.TextRange.Font.Size = 7.8
-    shp.TextFrame.TextRange.Font.Italic = msoTrue
-    shp.TextFrame.TextRange.Font.Color.RGB = RGB(71, 85, 105)
-    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignLeft
+    shp.TextFrame.TextRange.Font.Size = 8
+    shp.TextFrame.TextRange.Font.Bold = msoTrue
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    shp.TextFrame.VerticalAnchor = msoAnchorTop
     
-    MsgBox "Đã vẽ thành công sơ đồ hệ thống theo đúng cấu trúc hình mẫu!", vbInformation, "Thành Công"
+    ' 3 ô con SLAKE: Closed, Open NLG, Open
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 540, 426, 120, 46)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "Closed:" & vbCrLf & "Strict Acc, Medical Acc"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 7.5
+    shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(2).Font.Size = 6.8
+    shp.TextFrame.TextRange.Lines(2).Font.Color.RGB = RGB(51, 65, 85)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 670, 426, 130, 46)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "Open NLG:" & vbCrLf & "BLEU-1, 2 | ROUGE-1, L"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 7.5
+    shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(2).Font.Size = 6.8
+    shp.TextFrame.TextRange.Lines(2).Font.Color.RGB = RGB(51, 65, 85)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    Set shp = sld.Shapes.AddShape(msoShapeRoundedRectangle, 810, 426, 110, 46)
+    shp.Fill.Solid
+    shp.Fill.ForeColor.RGB = RGB(255, 255, 255)
+    shp.Line.ForeColor.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.Text = "Open:" & vbCrLf & "Strict EM, Medical Sem. Acc"
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Lines(1).Font.Size = 7.5
+    shp.TextFrame.TextRange.Lines(1).Font.Bold = msoTrue
+    shp.TextFrame.TextRange.Lines(2).Font.Size = 6.4
+    shp.TextFrame.TextRange.Lines(2).Font.Color.RGB = RGB(51, 65, 85)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    ' ==========================================================================
+    ' 4. CAPTION BÀI BÁO TẠP CHÍ Ở DƯỚI CÙNG
+    ' ==========================================================================
+    Set shp = sld.Shapes.AddShape(msoShapeRectangle, 15, 502, 930, 32)
+    shp.Fill.Transparency = 1
+    shp.Line.Visible = msoFalse
+    shp.TextFrame.TextRange.Text = "Hình 1. Tổng quan Adaptive-VLM-Charts. Đầu vào gồm ảnh I và/hoặc câu hỏi Q (nét đứt: tùy chọn); đầu vào chỉ có Q được truy hồi ảnh qua Hybrid RAG. " & _
+                                   "Router nhận văn bản câu hỏi Q trong prompt D: câu hỏi số học -> Adaptive LoRA CoT; câu hỏi đọc nhãn hoặc đầu vào chỉ có ảnh -> Direct Zero-Shot " & _
+                                   "(Standard CoT là baseline; đường Oracle / Direct Bypass là thiết lập cận trên). Đầu ra thống nhất được chuẩn hóa rồi chấm điểm match_fixed (CharXiv) " & _
+                                   "và BLEU, ROUGE (SLAKE); Adaptive Dynamic Routing đạt 39.60% (CharXiv) và 52.59% (SLAKE)."
+    shp.TextFrame.TextRange.Font.Name = "Arial"
+    shp.TextFrame.TextRange.Font.Size = 6.8
+    shp.TextFrame.TextRange.Font.Color.RGB = RGB(30, 41, 59)
+    shp.TextFrame.TextRange.ParagraphFormat.Alignment = ppAlignCenter
+    
+    MsgBox "Đã vẽ hoàn tất sơ đồ kiến trúc Adaptive-VLM-Charts chuẩn 1:1 theo ảnh mẫu vào Slide PowerPoint!", vbInformation, "Thành Công"
 End Sub

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-r"""charxiv_match.py — hàm chấm match_fixed dùng chung cho toàn bộ dự án VLM-Charts.
-Import ở mọi script:  from charxiv_match import match_fixed
+r"""charxiv_match.py — Hàm chấm match_fixed dùng chung cho toàn bộ dự án VLM-Charts.
+Import ở mọi script: from charxiv_match import match_fixed
 
 Cải tiến chuẩn hóa:
   1. Ký tự Hy Lạp (\sigma -> sigma, σ -> sigma).
@@ -23,22 +23,15 @@ GREEK_MAP = {
 
 def _clean(s):
     s = str(s).strip().lower().replace('$', '')
-    # Chuyển ký tự Hy Lạp Unicode về tên tiếng Anh để khớp với LaTeX (\sigma -> sigma, σ -> sigma)
     for grk, eng in GREEK_MAP.items():
         s = s.replace(grk, eng)
     s = re.sub(r'\\(?:mathrm|mathit|text|mathbf)\{([^}]*)\}', r'\1', s)
     s = s.replace('\\', '').replace('{', '').replace('}', '')
-    # Chuẩn hóa bố cục subplot: "1x2" hoặc "1 x 2" -> "1 by 2"
     s = re.sub(r'(\d)\s*(?:by|x)\s*(\d)', r'\1 by \2', s)
-    # Chuẩn hóa dải số: "1 - 2" -> "1-2"
     s = re.sub(r'(\d)\s*-\s*(\d)', r'\1-\2', s)
-    # Chuẩn hóa khoảng trắng quanh dấu bằng: "t = 5" -> "t=5"
     s = re.sub(r'\s*=\s*', '=', s)
-    # Bỏ tiền tố hình/mục phổ biến: "case 7" -> "7", "subplot (b)" -> "(b)"
     s = re.sub(r'^(?:case|subplot|option|figure|fig)\s+', '', s)
-    # Bỏ hậu tố đơn vị/đếm phổ biến: "7 lines" -> "7", "2 points" -> "2"
     s = re.sub(r'\s+(?:lines?|subplots?|points?|data points?|datasets?|curves?|clusters?|obstacles?|times?)$', '', s)
-    # Bỏ ký hiệu % nếu đi liền sau số
     s = re.sub(r'(\d)\s*%', r'\1', s)
     return re.sub(r'\s+', ' ', s).strip().rstrip('.')
 
