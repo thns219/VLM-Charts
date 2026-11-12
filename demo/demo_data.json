@@ -373,6 +373,20 @@
           "color": "#2563EB"
         },
         {
+          "name": "Adaptive Dynamic Routing (ĐỀ XUẤT)",
+          "type": "proposed_routing",
+          "overall": 48.3,
+          "ci95": [
+            46.2,
+            50.1
+          ],
+          "descriptive": 61.1,
+          "reasoning": 39.6,
+          "unanswerable": 16.2,
+          "color": "#EA580C",
+          "highlight": "Vượt trội mọi mô hình đơn lẻ (39.60% Reasoning): Số học -> Adaptive LoRA, Chữ -> Direct"
+        },
+        {
           "name": "Qwen2.5-VL-7B (Direct Oracle Ảnh)",
           "type": "baseline",
           "overall": 47.7,
@@ -386,7 +400,7 @@
           "color": "#0D9488"
         },
         {
-          "name": "Adaptive LoRA CoT (Đề xuất)",
+          "name": "Adaptive LoRA CoT (Đơn lẻ)",
           "type": "proposed",
           "overall": 47.2,
           "ci95": [
@@ -396,8 +410,8 @@
           "descriptive": 60.5,
           "reasoning": 37.4,
           "unanswerable": 16.0,
-          "color": "#EA580C",
-          "highlight": "Giữ vững 45.22% ở Số học Number-in-Chart (bằng trần Gemini)"
+          "color": "#8B5CF6",
+          "highlight": "Đột phá ở Số học Number-in-General (30.16%) và Number-in-Chart (45.22%)"
         },
         {
           "name": "Standard CoT (2-Stage CoT)",
@@ -532,6 +546,18 @@
     }
   },
   "figures_registry": [
+    {
+      "id": "system_architecture_redesign",
+      "title": "Hình 0: Sơ đồ Tổng quan Kiến trúc Hệ thống Adaptive-VLM-Charts (3 Pipeline)",
+      "file": "figures/system_architecture_redesign.png",
+      "description": "Kiến trúc hệ thống chuẩn xuất bản: Pipeline 1 (Input), Pipeline 2 (Hybrid RAG & Lập luận VLM), Pipeline 3 (Chuẩn hóa & Hệ cột đánh giá CharXiv + SLAKE)."
+    },
+    {
+      "id": "fig_dynamic_routing_breakthrough",
+      "title": "Hình Đột phá: Cơ chế Định tuyến Động Thích ứng (Adaptive Dynamic Routing)",
+      "file": "figures/fig_dynamic_routing_breakthrough.png",
+      "description": "Minh chứng thực nghiệm bước nhảy vọt: đạt 39.60% trên CharXiv và 52.59% trên SLAKE, vượt trội hơn toàn bộ các mô hình đơn lẻ."
+    },
     {
       "id": "fig_so_sanh_tong_the",
       "title": "Hình 1: So sánh Toàn cảnh Đa thể thức trên CharXiv (500 câu suy luận)",

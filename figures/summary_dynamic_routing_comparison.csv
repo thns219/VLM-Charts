@@ -1,0 +1,6 @@
+﻿Hệ thống,Độ chính xác tổng (%),KTC 95% Thấp,KTC 95% Cao,Number-in-Chart,Number-in-General,Text-in-Chart,Text-in-General
+Standard CoT (2-Stage CoT),36.2,32.4,40.6,35.65,28.57,40.38,39.13
+Adaptive LoRA CoT (Đơn lẻ),37.4,33.0,41.4,45.22,30.16,37.09,39.13
+Qwen2.5-VL-7B (Direct Zero-Shot),38.8,34.6,43.0,45.22,26.98,40.38,47.83
+Adaptive Dynamic Routing (ĐỀ XUẤT),39.6,35.4,43.8,45.22,30.16,40.38,47.83
+Oracle Upper Bound Router,49.2,44.8,53.6,53.91,40.48,49.77,58.7

@@ -10,9 +10,9 @@ let modalActiveImage = null;
 
 const MODE_CONFIG = {
   adaptive: {
-    name: "Adaptive CoT (Đề xuất)",
+    name: "Adaptive Dynamic Routing (Đề xuất)",
     slake: "52.59%",
-    charxiv: "37.40%"
+    charxiv: "39.60%"
   },
   no_cot: {
     name: "No-CoT (Trực tiếp)",

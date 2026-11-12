@@ -180,12 +180,12 @@ import re
 MODE_BENCHMARKS = {
     "adaptive": {
         "mode_id": "adaptive",
-        "name": "Adaptive CoT (Đề xuất)",
+        "name": "Adaptive Dynamic Routing (Đề xuất)",
         "badge": "Đề xuất tối ưu",
-        "charxiv_acc": "37.40%",
+        "charxiv_acc": "39.60%",
         "slake_acc": "52.59%",
-        "thought": "Hệ thống tự động kích hoạt bộ điều phối thích ứng (Adaptive CoT): ưu tiên phản xạ trực quan cho câu hỏi thị giác và gióng trục cẩn thận cho câu hỏi số học, đạt độ chính xác cao nhất (52.59% trên SLAKE, 37.40% trên CharXiv).",
-        "description": "Tự động thích ứng: No-CoT cho câu hỏi thị giác, CoT cho câu hỏi số học phức tạp."
+        "thought": "Hệ thống tự động kích hoạt bộ điều phối thích ứng (Adaptive Dynamic Routing): định tuyến câu hỏi trực quan về Direct Zero-Shot và gióng trục cẩn thận với Adaptive LoRA CoT cho câu hỏi số học phức tạp, đạt độ chính xác cao nhất (52.59% trên SLAKE, 39.60% trên CharXiv, vượt trội mọi mô hình đơn lẻ).",
+        "description": "Tự động thích ứng: Zero-Shot cho câu hỏi đọc tên/nhãn, Adaptive LoRA CoT cho câu hỏi số học phức tạp."
     },
     "no_cot": {
         "mode_id": "no_cot",
