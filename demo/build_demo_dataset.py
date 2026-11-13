@@ -380,7 +380,7 @@ global_stats = {
         "charts_count": 500,
         "systems": [
             {
-                "name": "Gemini 3.5 Flash (Oracle API)",
+                "name": "Gemini 3.5 Flash Lite (Oracle API)",
                 "type": "oracle",
                 "overall": 70.5,
                 "ci95": [68.7, 72.3],

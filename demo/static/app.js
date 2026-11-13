@@ -10,7 +10,7 @@ let modalActiveImage = null;
 
 const MODE_CONFIG = {
   adaptive: {
-    name: "Adaptive Dynamic Routing (Đề xuất)",
+    name: "Adaptive (Tự thích ứng)",
     slake: "52.59%",
     charxiv: "39.60%"
   },
@@ -429,9 +429,9 @@ function appendBotTurn(data, modeCfg) {
     <div class="bot-header-meta">
       <div class="bot-meta-left">
         <span class="meta-mode-badge">${modeName}</span>
-        <span class="meta-acc-badge">SLAKE: <strong>${slake}</strong> · CharXiv: <strong>${charxiv}</strong></span>
+        <span class="meta-acc-badge" title="Mốc đánh giá thực nghiệm ngoại tuyến của mô hình Qwen">Mốc Qwen: SLAKE <strong>${slake}</strong> · CharXiv <strong>${charxiv}</strong></span>
       </div>
-      <span class="meta-latency">Thời gian: ${latency}</span>
+      <span class="meta-latency">Thời gian gọi API: ${latency}</span>
     </div>
     <div class="bot-bubble">
       <div class="answer-content">

@@ -1,6 +1,23 @@
 # -*- coding: utf-8 -*-
 """demo/server.py — Máy chủ Backend cho ứng dụng Hỏi Đáp Thị Giác VLM (VQA Demo).
 
+KIẾN TRÚC & NGUYÊN LÝ HOẠT ĐỘNG CỦA BẢN DEMO:
+1. Giao diện trực tiếp (Live Inference): Bản web tương tác này gọi trực tiếp mô hình
+   đa phương thức Gemini qua Google GenAI API (gemini-2.5-flash hoặc gemini-3.5-flash-lite)
+   để đem lại trải nghiệm phản hồi tương tác thời gian thực mà không đòi hỏi GPU máy trạm cấu hình cao.
+2. Phân biệt 3 chế độ bằng Prompt Engineering:
+   - No-CoT: Prompt yêu cầu mô hình đưa ra đáp án trực tiếp, ngắn gọn, không giải thích.
+   - Standard CoT: Prompt yêu cầu mô hình phân rã thành 3 bước (Quan sát -> Phân tích -> Kết luận).
+   - Adaptive: Prompt hướng dẫn mô hình tự đánh giá độ phức tạp thị giác của câu hỏi (trả lời
+     thẳng cho câu hỏi nhận diện trực quan/nhãn; quan sát và suy luận cẩn trọng cho câu hỏi số liệu/tọa độ).
+   *LƯU Ý QUAN TRỌNG*: Phiên demo trực tiếp KHÔNG nạp cục bộ mô hình Qwen2.5-VL-7B, KHÔNG nạp trọng số
+   LoRA adapter, và KHÔNG kích hoạt bộ định tuyến tự động offline từ mục 3.4.
+3. Mốc chuẩn hiển thị trên thanh chế độ:
+   Các tỷ lệ chính xác (52.59% / 39.60%; 50.24% / 38.80%; 45.90% / 36.20%) là KẾT QUẢ ĐÁNH GIÁ
+   THỰC NGHIỆM NGOẠI TUYẾN (Offline Benchmark) của mô hình mã nguồn mở Qwen2.5-VL-7B trên 1.061 câu
+   hỏi SLAKE và 500 câu hỏi suy luận CharXiv, được gắn vào giao diện làm mốc tham chiếu khoa học đối chứng.
+4. Về phần cứng: Vận hành cục bộ Qwen 4-bit cần GPU đơn (như NVIDIA Tesla T4).
+
 Khởi chạy độc lập:
     python demo/server.py
 Hoặc từ thư mục gốc:
@@ -180,21 +197,21 @@ import re
 MODE_BENCHMARKS = {
     "adaptive": {
         "mode_id": "adaptive",
-        "name": "Adaptive Dynamic Routing (Đề xuất)",
-        "badge": "Đề xuất tối ưu",
+        "name": "Adaptive (Prompt Tự Thích Ứng)",
+        "badge": "Tự thích ứng",
         "charxiv_acc": "39.60%",
         "slake_acc": "52.59%",
-        "thought": "Hệ thống tự động kích hoạt bộ điều phối thích ứng (Adaptive Dynamic Routing): định tuyến câu hỏi trực quan về Direct Zero-Shot và gióng trục cẩn thận với Adaptive LoRA CoT cho câu hỏi số học phức tạp, đạt độ chính xác cao nhất (52.59% trên SLAKE, 39.60% trên CharXiv, vượt trội mọi mô hình đơn lẻ).",
-        "description": "Tự động thích ứng: Zero-Shot cho câu hỏi đọc tên/nhãn, Adaptive LoRA CoT cho câu hỏi số học phức tạp."
+        "thought": "Mô hình nhận prompt hướng dẫn tự thích ứng: phản xạ trực tiếp cho câu hỏi nhận diện trực quan (tránh overthinking) và phân tích thận trọng cho câu hỏi biểu đồ/số liệu phức tạp. Tỷ lệ 52.59% (SLAKE) và 39.60% (CharXiv) là kết quả đánh giá thực nghiệm ngoại tuyến của mô hình Qwen khi áp dụng cơ chế Dynamic Routing.",
+        "description": "Mô hình tự quyết định độ sâu suy luận: trả lời thẳng nếu là nhận diện trực quan, suy luận kỹ nếu là số liệu (Mốc Qwen: SLAKE 52.59%, CharXiv 39.60%)."
     },
     "no_cot": {
         "mode_id": "no_cot",
         "name": "No-CoT (Trực tiếp)",
-        "badge": "Baseline trực tiếp",
+        "badge": "Direct Baseline",
         "charxiv_acc": "38.80%",
         "slake_acc": "50.24%",
-        "thought": "Chế độ No-CoT phản xạ thị giác trực tiếp trong 1 bước: đưa ra kết luận ngay không qua diễn giải trung gian, phù hợp câu hỏi thị giác (đạt 69.47% Closed trên SLAKE).",
-        "description": "Phản xạ thị giác nhanh, trả lời thẳng vào đáp án không qua bước suy luận trung gian."
+        "thought": "Mô hình nhận prompt ép trả lời trực tiếp trong 1 bước, không diễn giải trung gian. Tỷ lệ 50.24% (SLAKE) và 38.80% (CharXiv) là mốc thực nghiệm ngoại tuyến của Qwen Direct Zero-Shot.",
+        "description": "Phản xạ thị giác trực tiếp, trả lời thẳng vào đáp án không qua bước suy luận (Mốc Qwen: SLAKE 50.24%, CharXiv 38.80%)."
     },
     "cot": {
         "mode_id": "cot",
@@ -202,8 +219,8 @@ MODE_BENCHMARKS = {
         "badge": "Chuỗi suy luận",
         "charxiv_acc": "36.20%",
         "slake_acc": "45.90%",
-        "thought": "Chế độ Standard CoT chia bài toán thành 3 bước (Quan sát -> Phân tích -> Kết luận): hữu ích cho phép đo số học nhưng dễ gặp hiện tượng CoT Degradation (độ chính xác SLAKE giảm còn 45.90% do suy diễn lan man).",
-        "description": "Phân rã thành 3 bước suy luận, gặp hiện tượng CoT Degradation trên câu hỏi đơn giản."
+        "thought": "Mô hình nhận prompt ép lập luận 3 bước (Quan sát -> Phân tích -> Kết luận). Tỷ lệ 45.90% (SLAKE) và 36.20% (CharXiv) là mốc thực nghiệm ngoại tuyến của Qwen Standard CoT.",
+        "description": "Phân rã thành 3 bước suy luận tuần tự (Mốc Qwen: SLAKE 45.90%, CharXiv 36.20%)."
     }
 }
 
@@ -258,10 +275,10 @@ def run_live_gemini_vqa(pil_image, question, mode="adaptive", api_key=None):
         )
     else:  # adaptive
         instruction = (
-            "Bạn đang hoạt động ở chế độ Thích ứng Tối ưu (Adaptive CoT VLM). "
-            "Tùy vào câu hỏi:\n"
-            "- Nếu là câu hỏi quan sát trực quan (có/không, định vị, màu sắc): Hãy trả lời trực tiếp, rõ ràng vào trọng tâm.\n"
-            "- Nếu là câu hỏi số liệu hoặc biểu đồ phức tạp: Hãy đọc kỹ các trục tọa độ, đối chiếu thận trọng trước khi kết luận."
+            "Bạn đang hoạt động ở chế độ Tự Thích Ứng (Adaptive Prompting). "
+            "Tùy vào tính chất của câu hỏi:\n"
+            "- Nếu là câu hỏi quan sát trực quan đơn giản, đọc nhãn hoặc nhận diện giải phẫu: Hãy trả lời trực tiếp, rõ ràng, vào thẳng trọng tâm (tránh overthinking).\n"
+            "- Nếu là câu hỏi đo đạc mốc tọa độ hoặc tính toán số học phức tạp: Hãy quan sát kỹ mốc tọa độ và suy luận cẩn trọng từng bước trước khi đưa ra kết luận."
         )
 
     prompt = (
@@ -301,7 +318,7 @@ def run_live_gemini_vqa(pil_image, question, mode="adaptive", api_key=None):
                     "mode_name": meta["name"],
                     "charxiv_acc": meta["charxiv_acc"],
                     "slake_acc": meta["slake_acc"],
-                    "benchmark_info": f"Tỷ lệ đúng thực nghiệm: SLAKE: {meta['slake_acc']} | CharXiv: {meta['charxiv_acc']}"
+                    "benchmark_info": f"Mốc thực nghiệm Qwen offline: SLAKE: {meta['slake_acc']} | CharXiv: {meta['charxiv_acc']}"
                 }
         except Exception as e:
             last_err = e
