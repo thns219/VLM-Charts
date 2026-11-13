@@ -129,9 +129,9 @@ charxiv_cases = [
         "question": "What algorithm shows the highest average caching reward at epoch 0?",
         "sub_type": "Text-in-Chart (Đối chiếu Chú giải Legend)",
         "gold_answer": "PD-HDDPG, plain",
-        "phenomenon": "breakthrough",
-        "phenomenon_label": "CoT Breakthrough (Đối chiếu Legend Đa bước)",
-        "phenomenon_badge": "success",
+        "phenomenon": "router_tradeoff",
+        "phenomenon_label": "Router Trade-off (Giới hạn của Router Thống kê)",
+        "phenomenon_badge": "warning",
         "direct": {
             "pred": "RCU",
             "correct": False,
@@ -147,12 +147,13 @@ charxiv_cases = [
             "diagnosis": "Đòi hỏi phân giải 2 bước: (1) tìm điểm cực trị tại epoch 0, (2) đối chiếu marker với Legend. Direct đoán mò RCU, trong khi CoT suy luận chuẩn."
         },
         "adaptive": {
-            "route": "CoT_Legend_Reasoning",
-            "route_label": "🧠 Kích hoạt CoT Đối chiếu Đa bước",
-            "justification": "Câu hỏi suy luận phức hợp kết hợp tọa độ cực trị và bảng chú thích. Phải dùng CoT để tránh nhầm lẫn giữa các marker tương đồng.",
-            "pred": "PD-HDDPG",
-            "correct": True,
-            "latency": "4.9s"
+            "route": "Direct_Perceptual_Routing",
+            "route_label": "⚡ Định tuyến Trực tiếp (Text-in-Chart)",
+            "justification": "Câu hỏi thuộc nhóm 'Text-in-Chart' (hỏi tên thuật toán 'What algorithm') -> Router chọn nhánh Direct Zero-Shot theo quy tắc chung. Tuy nhiên, do biểu đồ có chú thích legend phức tạp, Direct đoán nhầm thành 'RCU' thay vì 'PD-HDDPG, plain'.",
+            "pred": "RCU",
+            "correct": False,
+            "latency": "1.2s",
+            "diagnosis": "Trường hợp đánh đổi thực tế: Standard CoT làm đúng nhờ 4 bước dò marker, nhưng Router theo loại câu hỏi xếp vào nhóm Text nên đưa về Direct và bị sai. Đây là ca điển hình giải thích khoảng cách giữa Router thực tế (39.60%) và cận trên Oracle Router (49.20%)."
         }
     },
     {
@@ -391,8 +392,8 @@ global_stats = {
             {
                 "name": "Adaptive Dynamic Routing (ĐỀ XUẤT)",
                 "type": "proposed_routing",
-                "overall": 48.3,
-                "ci95": [46.2, 50.1],
+                "overall": 47.8,
+                "ci95": [45.9, 49.7],
                 "descriptive": 61.1,
                 "reasoning": 39.6,
                 "unanswerable": 16.2,
@@ -403,7 +404,7 @@ global_stats = {
                 "name": "Qwen2.5-VL-7B (Direct Oracle Ảnh)",
                 "type": "baseline",
                 "overall": 47.7,
-                "ci95": [45.8, 49.5],
+                "ci95": [45.8, 49.6],
                 "descriptive": 61.1,
                 "reasoning": 38.8,
                 "unanswerable": 16.2,
@@ -412,22 +413,22 @@ global_stats = {
             {
                 "name": "Adaptive LoRA CoT (Đơn lẻ)",
                 "type": "proposed",
-                "overall": 47.2,
-                "ci95": [45.3, 49.0],
-                "descriptive": 60.5,
+                "overall": 47.4,
+                "ci95": [45.4, 49.4],
+                "descriptive": 61.1,
                 "reasoning": 37.4,
-                "unanswerable": 16.0,
+                "unanswerable": 16.2,
                 "color": "#8B5CF6",
                 "highlight": "Đột phá ở Số học Number-in-General (30.16%) và Number-in-Chart (45.22%)"
             },
             {
                 "name": "Standard CoT (2-Stage CoT)",
                 "type": "cot",
-                "overall": 45.4,
-                "ci95": [43.5, 47.3],
-                "descriptive": 58.0,
+                "overall": 47.2,
+                "ci95": [45.3, 49.1],
+                "descriptive": 61.1,
                 "reasoning": 36.2,
-                "unanswerable": 15.5,
+                "unanswerable": 16.2,
                 "color": "#94A3B8"
             },
             {
