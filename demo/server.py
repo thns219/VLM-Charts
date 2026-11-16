@@ -54,8 +54,31 @@ HF_API_URL = "https://router.huggingface.co/novita/v3/openai/chat/completions"
 HF_MODEL = "Qwen/Qwen2.5-VL-7B-Instruct"
 
 def get_hf_token():
-    """Đọc HF_TOKEN động mỗi lần request (không cache tại startup)."""
-    return os.environ.get("HF_TOKEN", "").strip()
+    """Đọc HF_TOKEN động: ưu tiên env var, fallback sang .env / hf_token.txt."""
+    token = os.environ.get("HF_TOKEN", "").strip()
+    if token:
+        return token
+    # Fallback: đọc từ file
+    candidates = [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "hf_token.txt"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"),
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line or line.startswith("#"):
+                            continue
+                        if "HF_TOKEN=" in line:
+                            return line.split("HF_TOKEN=", 1)[1].strip().strip('"\'')
+                        elif line.startswith("hf_"):
+                            return line
+            except Exception:
+                pass
+    return ""
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     daemon_threads = True
