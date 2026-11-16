@@ -17,7 +17,7 @@
       <span class="brand-title">Hỏi Đáp Thị Giác VLM</span>
       <div class="engine-switch" id="engineSwitch">
         <button type="button" class="btn-engine active" data-engine="cloud" id="btnEngineCloud" title="Chạy qua Cloud Gemini API (nhanh, nhẹ, không tốn VRAM)">Cloud VLM</button>
-        <button type="button" class="btn-engine" data-engine="local_qwen" id="btnEngineLocal" title="Chạy mô hình Qwen2.5-VL-7B trực tiếp trên GPU máy">Local Qwen</button>
+        <button type="button" class="btn-engine" data-engine="hf_qwen" id="btnEngineLocal" title="Qwen2.5-VL-7B qua HuggingFace Inference API · Cần HF_TOKEN · Không cần GPU">Qwen 7B (HF API)</button>
       </div>
     </div>
 
@@ -35,10 +35,10 @@
     </div>
 
     <div class="header-right">
-      <!-- GPU Hardware Telemetry Chip -->
-      <button type="button" class="hw-chip" id="hwChip" title="Xem thông số GPU và trạng thái sẵn sàng cho Qwen 7B">
+      <!-- HF API Status Chip -->
+      <button type="button" class="hw-chip" id="hwChip" title="Trạng thái HuggingFace API · Nhấn để xem chi tiết">
         <span class="hw-dot dot-checking" id="hwDot"></span>
-        <span class="hw-text" id="hwText">GPU</span>
+        <span class="hw-text" id="hwText">HF API</span>
       </button>
 
       <button type="button" class="btn-new-chat" id="btnNewChat">
@@ -154,41 +154,48 @@
     </div>
   </div>
 
-  <!-- Modal Chẩn Đoán Phần Cứng GPU (Hardware Diagnostic Modal) -->
+  <!-- Modal Thông Tin HuggingFace API (HF Token Info Modal) -->
   <div class="image-modal-backdrop" id="hwModal" style="display: none;">
     <div class="hw-modal-dialog">
       <div class="hw-modal-header">
-        <div class="hw-modal-title">Thông Số Phần Cứng Mô Hình Cục Bộ</div>
+        <div class="hw-modal-title">Qwen 7B qua HuggingFace Inference API</div>
         <button type="button" class="btn-modal-close" id="btnHwModalClose" title="Đóng">✕</button>
       </div>
       <div class="hw-modal-body">
         <div class="hw-info-card">
           <div class="hw-info-row">
-            <span class="hw-label">GPU phát hiện:</span>
-            <span class="hw-val" id="diagGpuName">NVIDIA GeForce RTX 3050 Laptop GPU</span>
+            <span class="hw-label">Mô hình:</span>
+            <span class="hw-val">Qwen2.5-VL-7B-Instruct</span>
           </div>
           <div class="hw-info-row">
-            <span class="hw-label">Bộ nhớ đồ họa (VRAM):</span>
-            <span class="hw-val" id="diagGpuVram">4.0 GB VRAM</span>
+            <span class="hw-label">Nhà cung cấp:</span>
+            <span class="hw-val">HuggingFace Inference API (Novita)</span>
           </div>
           <div class="hw-info-row">
-            <span class="hw-label">Yêu cầu Qwen 7B (4-bit NF4):</span>
-            <span class="hw-val highlight-val">&ge; 7.5 - 8.0 GB VRAM (Tesla T4 / RTX 3090/4090)</span>
+            <span class="hw-label">Yêu cầu GPU:</span>
+            <span class="hw-val highlight-val">Không cần GPU local</span>
+          </div>
+          <div class="hw-info-row">
+            <span class="hw-label">Trạng thái HF Token:</span>
+            <span class="hw-val" id="diagHfStatus">Đang kiểm tra...</span>
           </div>
         </div>
-        <div class="hw-warning-box">
-          <strong>Lưu ý kỹ thuật:</strong> Mô hình đa phương thức <strong>Qwen2.5-VL-7B</strong> (kể cả bản 4-bit) cần tối thiểu ~8GB VRAM để nạp đồng thời bộ mã hóa thị giác Vision Transformer và mô hình ngôn ngữ. Trên thiết bị hiện tại (4.0 GB), việc tải mô hình có thể dẫn đến tràn bộ nhớ (CUDA Out of Memory) hoặc phải offload sang CPU gây nghẽn và độ trễ cao.
+        <div class="hw-warning-box" id="hwModalWarning" style="display:none;">
+          <strong>Cần HF_TOKEN:</strong> Để dùng Qwen 7B qua HuggingFace API, hãy đặt biến môi trường
+          <code>HF_TOKEN=hf_xxx...</code> rồi khởi động lại server. Token miễn phí tại
+          <strong>huggingface.co/settings/tokens</strong>.
         </div>
         <p class="hw-guide-text">
-          Khuyến nghị: Chế độ <strong>Cloud VLM (Gemini API)</strong> giúp bạn trải nghiệm trực tiếp tức thì với toàn bộ cơ chế <strong>Adaptive Routing</strong> và mốc kiểm chứng khoa học của đề tài.
+          Engine <strong>Qwen 7B (HF API)</strong> gọi mô hình Qwen2.5-VL-7B-Instruct qua HuggingFace Inference API — 
+          không cần GPU local, không cần cài transformers/bitsandbytes. Chỉ cần HF_TOKEN (miễn phí).
         </p>
       </div>
       <div class="hw-modal-footer">
         <button type="button" class="btn-diag-primary" id="btnDiagUseCloud">
-          Dùng Cloud VLM (Khuyến nghị · Phản hồi tức thì)
+          Dùng Cloud VLM (Gemini · Khuyến nghị · Phản hồi tức thì)
         </button>
         <button type="button" class="btn-diag-secondary" id="btnDiagForceLocal">
-          Vẫn kích hoạt Local Qwen (Thử nghiệm)
+          Dùng Qwen 7B (HF API) · Cần HF_TOKEN
         </button>
       </div>
     </div>

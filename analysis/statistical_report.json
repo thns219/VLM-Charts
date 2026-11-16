@@ -1,0 +1,75 @@
+{
+  "slake_mcnemar": {
+    "statistic": 8.3478,
+    "p_value": 0.003861,
+    "b01": 22,
+    "b10": 47,
+    "significant": true
+  },
+  "charxiv_mcnemar": {
+    "statistic": 0.18,
+    "p_value": 0.671373,
+    "b01": 23,
+    "b10": 27,
+    "significant": false
+  },
+  "slake_bootstrap_ci": {
+    "no_cot": [
+      47.5024,
+      53.2516
+    ],
+    "cot": [
+      42.8841,
+      48.9185
+    ],
+    "adaptive": [
+      49.6701,
+      55.516
+    ],
+    "no_cot_mean": 50.2356,
+    "cot_mean": 45.9001,
+    "adaptive_mean": 52.5919
+  },
+  "charxiv_bootstrap_ci": {
+    "direct": [
+      34.595,
+      43.0
+    ],
+    "cot": [
+      31.8,
+      40.4
+    ],
+    "routed": [
+      35.4,
+      43.8
+    ],
+    "direct_mean": 38.8,
+    "cot_mean": 36.2,
+    "routed_mean": 39.6
+  },
+  "slake_text_router": {
+    "val_accuracy": 98.5849,
+    "test_accuracy": 97.6526
+  },
+  "charxiv_text_router": {
+    "val_accuracy": 77.0,
+    "test_accuracy": 80.0
+  },
+  "slake_proper_split": {
+    "val": {
+      "no_cot": 47.1698,
+      "cot": 46.2264,
+      "adaptive": 50.0
+    },
+    "test": {
+      "no_cot": 53.0516,
+      "cot": 46.4789,
+      "adaptive": 55.8685
+    },
+    "full": {
+      "no_cot": 50.2356,
+      "cot": 45.9001,
+      "adaptive": 52.5919
+    }
+  }
+}

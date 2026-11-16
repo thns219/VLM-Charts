@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 """demo/server.py — Máy chủ Backend cho ứng dụng Hỏi Đáp Thị Giác VLM (VQA Demo).
 
-KIẾN TRÚC & NGUYÊN LÝ HOẠT ĐỘNG CỦA BẢN DEMO (HỆ THỐNG DUAL-ENGINE):
-1. Kiến trúc Song Mã (Dual-Engine Architecture):
+KIẾN TRÚC & NGUYÊN LÝ HOẠT ĐỘNG CỦA BẢN DEMO (HỆ THỐNG DUAL-ENGINE - CLOUD ONLY):
+1. Kiến trúc Song Mã (Dual-Engine Architecture - 100% Cloud):
    - Engine 1 (Cloud VLM API): Sử dụng mô hình đa phương thức Gemini qua Google GenAI API
      (gemini-2.5-flash hoặc gemini-3.5-flash-lite) để cung cấp phản hồi tương tác tức thì
      trên mọi máy tính (kể cả máy không có GPU rời hoặc GPU < 8GB VRAM).
-   - Engine 2 (Local Qwen2.5-VL GPU): Cho phép nạp cục bộ mô hình mã nguồn mở Qwen2.5-VL-7B-Instruct
-     (lượng tử hóa 4-bit NF4) và tự động tích hợp trọng số LoRA adapter nếu có trong thư mục models/.
-     Hệ thống tích hợp module đo kiểm phần cứng (Hardware Telemetry qua PyTorch CUDA & nvidia-smi)
-     để kiểm tra ngưỡng VRAM khả dụng (khuyến nghị >= 8GB VRAM như Tesla T4 hoặc RTX 3090/4090).
+   - Engine 2 (Qwen 7B via HuggingFace API): Gọi mô hình Qwen2.5-VL-7B-Instruct qua
+     HuggingFace Inference API (Novita router). Không cần GPU local, chỉ cần HF_TOKEN.
+     Hỗ trợ đầy đủ 3 chế độ: Adaptive, No-CoT, Standard CoT.
 
 2. Cơ chế Định Tuyến Tự Động (Adaptive Dynamic Router):
    - Khi chạy ở chế độ Adaptive (Tự Thích Ứng):
@@ -43,9 +42,17 @@ import base64
 import io
 import mimetypes
 import urllib.parse
+import requests as _requests
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
 from PIL import Image, ImageOps
+
+# ==============================================================================
+# HuggingFace Inference API — Qwen2.5-VL-7B-Instruct (không cần GPU local)
+# ==============================================================================
+HF_TOKEN = os.environ.get("HF_TOKEN", "")
+HF_API_URL = "https://router.huggingface.co/novita/v3/openai/chat/completions"
+HF_MODEL = "Qwen/Qwen2.5-VL-7B-Instruct"
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     daemon_threads = True
@@ -342,7 +349,96 @@ def run_live_gemini_vqa(pil_image, question, mode="adaptive", api_key=None):
 # ==============================================================================
 import subprocess
 
-def probe_nvidia_smi():
+
+def run_hf_qwen_inference(question, image_b64, route):
+    """Gọi Qwen2.5-VL-7B qua HuggingFace Inference API (không cần GPU local)."""
+    if not HF_TOKEN:
+        return {
+            "error": "HF_TOKEN chưa được cấu hình. Vui lòng đặt biến môi trường HF_TOKEN.",
+            "model": "Qwen2.5-VL-7B (HF API)",
+            "route": route
+        }
+
+    # Build system prompt theo route
+    if route == "cot":
+        system_msg = (
+            "Bạn là chuyên gia phân tích hình ảnh y khoa và biểu đồ. "
+            "Hãy suy luận từng bước (Chain-of-Thought) trước khi đưa ra câu trả lời cuối. "
+            "Phân tích theo 3 bước: Quan sát -> Phân tích -> Kết luận."
+        )
+        user_prefix = "Hãy suy luận từng bước:\n"
+    elif route == "adaptive":
+        system_msg = (
+            "Bạn là chuyên gia VQA. Phân tích câu hỏi để chọn chiến lược phù hợp: "
+            "nếu câu hỏi đơn giản (nhận diện nhãn, trực quan) trả lời ngắn gọn trực tiếp; "
+            "nếu câu hỏi phức tạp (số học, tọa độ, so sánh) hãy suy luận từng bước."
+        )
+        user_prefix = ""
+    else:  # direct / no_cot
+        system_msg = (
+            "Bạn là chuyên gia phân tích hình ảnh. "
+            "Trả lời ngắn gọn, chính xác, trực tiếp — không giải thích dài dòng."
+        )
+        user_prefix = ""
+
+    messages = [
+        {"role": "system", "content": system_msg},
+        {
+            "role": "user",
+            "content": [
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_b64}"}},
+                {"type": "text", "text": f"{user_prefix}{question}"}
+            ]
+        }
+    ]
+
+    headers = {
+        "Authorization": f"Bearer {HF_TOKEN}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": HF_MODEL,
+        "messages": messages,
+        "max_tokens": 512,
+        "temperature": 0.1
+    }
+
+    t0 = time.time()
+    try:
+        resp = _requests.post(HF_API_URL, headers=headers, json=payload, timeout=90)
+        resp.raise_for_status()
+        data = resp.json()
+        answer = data["choices"][0]["message"]["content"]
+        elapsed = round(time.time() - t0, 2)
+
+        # Xác định nhãn route
+        route_labels = {
+            "direct": "No-CoT (Trực tiếp)",
+            "no_cot": "No-CoT (Trực tiếp)",
+            "cot": "Standard CoT (Từng bước)",
+            "adaptive": "Adaptive LoRA CoT" if ENGINE_STATE.get("lora_loaded") else "Adaptive CoT"
+        }
+
+        meta = MODE_BENCHMARKS.get(route, MODE_BENCHMARKS.get("adaptive", {}))
+        clean_answer = clean_latex_and_symbols(answer)
+        return {
+            "pred": clean_answer,
+            "thought": f"[Qwen2.5-VL-7B · HuggingFace API] Chế độ: {route_labels.get(route, route)}. Mô hình suy luận qua HF Inference API (Novita router) — không cần GPU local.",
+            "latency": f"{elapsed} giây (HF API)",
+            "model": "Qwen2.5-VL-7B-Instruct (HF API)",
+            "engine": "hf_qwen",
+            "mode": route,
+            "mode_name": meta.get("name", route_labels.get(route, route)),
+            "charxiv_acc": meta.get("charxiv_acc", "39.60%"),
+            "slake_acc": meta.get("slake_acc", "52.59%"),
+            "benchmark_info": f"Mô hình Qwen2.5-VL-7B qua HuggingFace API | Mốc offline: SLAKE {meta.get('slake_acc','52.59%')} · CharXiv {meta.get('charxiv_acc','39.60%')}"
+        }
+    except Exception as e:
+        return {
+            "error": f"HF API lỗi: {str(e)}. Vui lòng kiểm tra HF_TOKEN hoặc thử lại sau.",
+            "model": "Qwen2.5-VL-7B (HF API)",
+            "route": route
+        }def probe_nvidia_smi():
     """Truy vấn thông số GPU vật lý qua nvidia-smi (kể cả khi PyTorch chưa cài CUDA)."""
     try:
         res = subprocess.run(
@@ -404,7 +500,7 @@ def get_hardware_telemetry():
 
 # Trạng thái toàn cục của hệ thống Dual-Engine
 ENGINE_STATE = {
-    "active_engine": "cloud",  # "cloud" hoặc "local_qwen"
+    "active_engine": "cloud",  # "cloud" hoặc "hf_qwen"
     "local_model": None,
     "local_processor": None,
     "local_status": "unloaded",  # "unloaded", "loading", "ready", "error"
@@ -625,7 +721,12 @@ class DemoHandler(BaseHTTPRequestHandler):
                 "local_status": ENGINE_STATE["local_status"],
                 "local_error": ENGINE_STATE["local_error"],
                 "lora_loaded": ENGINE_STATE["lora_loaded"],
-                "lora_path": ENGINE_STATE["lora_path"]
+                "lora_path": ENGINE_STATE["lora_path"],
+                # Thông tin HF API engine
+                "hf_token_configured": bool(HF_TOKEN),
+                "qwen_engine": "hf_api",
+                "qwen_model": "Qwen2.5-VL-7B-Instruct",
+                "qwen_via": "HuggingFace Inference API (Novita)"
             }
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -685,13 +786,16 @@ class DemoHandler(BaseHTTPRequestHandler):
         content_length = int(self.headers.get("Content-Length", 0))
         post_body = self.rfile.read(content_length)
 
-        # Cấu hình đổi Engine suy luận: cloud vs local_qwen
+        # Cấu hình đổi Engine suy luận: cloud vs hf_qwen
         if parsed.path == "/api/set_engine":
             try:
                 payload = json.loads(post_body.decode("utf-8"))
                 target = payload.get("engine", "cloud")
-                if target not in ["cloud", "local_qwen"]:
-                    raise ValueError("Engine không hợp lệ. Chỉ chấp nhận 'cloud' hoặc 'local_qwen'.")
+                if target not in ["cloud", "hf_qwen", "local_qwen"]:
+                    raise ValueError("Engine không hợp lệ. Chỉ chấp nhận 'cloud' hoặc 'hf_qwen'.")
+                # Normalize: local_qwen -> hf_qwen (backward compat)
+                if target == "local_qwen":
+                    target = "hf_qwen"
                 ENGINE_STATE["active_engine"] = target
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -721,8 +825,14 @@ class DemoHandler(BaseHTTPRequestHandler):
                     raise ValueError("Không thể tìm thấy hoặc đọc hình ảnh đầu vào.")
 
                 # Gọi trực tiếp mô hình AI thật theo Engine được chọn
-                if engine == "local_qwen":
-                    response_data = run_local_qwen_inference(pil_img, question, mode=mode)
+                if engine in ("local_qwen", "hf_qwen"):
+                    # Encode ảnh sang base64 để gửi qua HF API
+                    buf = io.BytesIO()
+                    pil_img.save(buf, format="JPEG", quality=90)
+                    image_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+                    response_data = run_hf_qwen_inference(question, image_b64, mode)
+                    if "error" in response_data:
+                        raise RuntimeError(response_data["error"])
                 else:
                     response_data = run_live_gemini_vqa(pil_img, question, mode=mode, api_key=custom_key)
 

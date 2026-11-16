@@ -8,8 +8,9 @@ let currentImageName = "Biểu đồ Covid (CharXiv)";
 let selectedMode = "adaptive";
 let modalActiveImage = null;
 
-let activeEngine = "cloud"; // "cloud" | "local_qwen"
+let activeEngine = "cloud"; // "cloud" | "hf_qwen"
 let hwTelemetry = null;
+let hfTokenConfigured = false;
 
 const MODE_CONFIG = {
   adaptive: {
@@ -101,15 +102,9 @@ function setupEventListeners() {
 
   if (btnEngineLocal) {
     btnEngineLocal.addEventListener("click", () => {
-      if (hwTelemetry && !hwTelemetry.is_sufficient_for_7b) {
-        openHwModal();
-      } else {
-        setEngine("local_qwen");
-      }
+      openHwModal();
     });
-  }
-
-  // 1c. Click vào GPU Telemetry Chip để mở Modal chẩn đoán phần cứng
+  }  // 1c. Click vào GPU Telemetry Chip để mở Modal chẩn đoán phần cứng
   if (hwChip) {
     hwChip.addEventListener("click", openHwModal);
   }
@@ -127,7 +122,7 @@ function setupEventListeners() {
 
   if (btnDiagForceLocal) {
     btnDiagForceLocal.addEventListener("click", () => {
-      setEngine("local_qwen");
+      setEngine("hf_qwen");
       closeHwModal();
     });
   }
@@ -295,52 +290,48 @@ async function checkEngineStatus() {
     const data = await res.json();
     hwTelemetry = data.hardware;
     activeEngine = data.active_engine || "cloud";
+    hfTokenConfigured = data.hf_token_configured === true;
     updateEngineSwitchUI();
     updateHardwareChipUI();
   } catch (e) {
-    console.error("Lỗi kiểm tra phần cứng:", e);
-    if (hwText) hwText.textContent = "Không thể đọc GPU";
+    console.error("Lỗi kiểm tra trạng thái engine:", e);
+    if (hwText) hwText.textContent = "N/A";
   }
 }
 
 function updateHardwareChipUI() {
   if (!hwChip || !hwDot || !hwText) return;
-  if (!hwTelemetry) {
-    hwText.textContent = "Không có GPU";
-    hwDot.className = "hw-dot dot-warning";
-    return;
-  }
 
-  const name = hwTelemetry.gpu_name || "N/A";
-  const vram = hwTelemetry.vram_gb || 0;
-  const isSufficient = hwTelemetry.is_sufficient_for_7b;
-  let shortName = name.replace("NVIDIA GeForce ", "").replace("Laptop GPU", "").trim();
-
-  if (isSufficient) {
+  // Hiển thị trạng thái HF API thay vì GPU
+  if (hfTokenConfigured) {
     hwDot.className = "hw-dot dot-ready";
-    hwText.textContent = `${shortName} (${vram}GB)`;
-    hwChip.title = `GPU: ${name} (${vram} GB VRAM) — Đủ điều kiện chạy Qwen 7B`;
-  } else if (hwTelemetry.gpu_available) {
-    hwDot.className = "hw-dot dot-warning";
-    hwText.textContent = `${shortName} (${vram}GB)`;
-    hwChip.title = `GPU: ${name} (${vram} GB VRAM) — Nhấp để xem thông số & chẩn đoán`;
+    hwText.textContent = "HF API";
+    hwChip.title = "HuggingFace Token đã cấu hình · Qwen2.5-VL-7B-Instruct sẵn sàng";
   } else {
     hwDot.className = "hw-dot dot-warning";
-    hwText.textContent = "CPU";
-    hwChip.title = "Không có GPU rời — Khuyến nghị chạy qua Cloud VLM API";
+    hwText.textContent = "HF API";
+    hwChip.title = "HuggingFace Token chưa cấu hình · Chỉ Cloud VLM khả dụng · Nhấn để xem hướng dẫn";
   }
 
-  if (diagGpuName) diagGpuName.textContent = name;
-  if (diagGpuVram) diagGpuVram.textContent = `${vram} GB VRAM (${hwTelemetry.torch_cuda ? "CUDA khả dụng" : "Driver SMI phát hiện"})`;
+  // Cập nhật diagHfStatus nếu có
+  const diagHfStatus = document.getElementById("diagHfStatus");
+  if (diagHfStatus) {
+    diagHfStatus.textContent = hfTokenConfigured ? "Đã cấu hình (HF_TOKEN)" : "Chưa cấu hình";
+    diagHfStatus.style.color = hfTokenConfigured ? "#15803d" : "#b91c1c";
+  }
+  const hwModalWarning = document.getElementById("hwModalWarning");
+  if (hwModalWarning) {
+    hwModalWarning.style.display = hfTokenConfigured ? "none" : "block";
+  }
 }
 
 function updateEngineSwitchUI() {
   if (btnEngineCloud && btnEngineLocal) {
-    if (activeEngine === "local_qwen") {
+    if (activeEngine === "hf_qwen") {
       btnEngineLocal.classList.add("active");
       btnEngineCloud.classList.remove("active");
       if (footerNote) {
-        footerNote.innerHTML = `Mô hình: <strong>Qwen2.5-VL-7B (Local GPU)</strong> · Chế độ: <strong>${selectedMode.toUpperCase()}</strong> · Mốc chuẩn: SLAKE 52.59% · CharXiv 39.60%`;
+        footerNote.innerHTML = `Mô hình: <strong>Qwen2.5-VL-7B-Instruct · HuggingFace API · Miễn phí với HF Token</strong> · Chế độ: <strong>${selectedMode.toUpperCase()}</strong> · Mốc chuẩn: SLAKE 52.59% · CharXiv 39.60%`;
       }
     } else {
       btnEngineCloud.classList.add("active");
@@ -353,20 +344,39 @@ function updateEngineSwitchUI() {
 }
 
 async function setEngine(engine) {
+  // Normalize: map hf_qwen properly
+  const engineKey = (engine === "hf_qwen" || engine === "local_qwen") ? "hf_qwen" : "cloud";
   try {
     const res = await fetch("/api/set_engine", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ engine: engine })
+      body: JSON.stringify({ engine: engineKey })
     });
     const data = await res.json();
     if (data.active_engine) {
       activeEngine = data.active_engine;
+      // Nếu chọn hf_qwen mà chưa có HF_TOKEN → hiện cảnh báo
+      if (activeEngine === "hf_qwen" && !hfTokenConfigured) {
+        showToast("Cần đặt HF_TOKEN để dùng Qwen 7B (HF API). Thêm biến môi trường HF_TOKEN rồi khởi động lại server.");
+      }
       updateEngineSwitchUI();
     }
   } catch (err) {
     console.error("Lỗi chuyển engine:", err);
   }
+}
+
+function showToast(msg) {
+  let toast = document.getElementById("hfToast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "hfToast";
+    toast.style.cssText = "position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#fffbeb;border:1px solid #f59e0b;border-left:4px solid #f59e0b;color:#92400e;padding:10px 18px;border-radius:8px;font-size:0.82rem;font-weight:500;z-index:9998;max-width:480px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.1);";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.display = "block";
+  setTimeout(() => { toast.style.display = "none"; }, 6000);
 }
 
 function autoResizeTextarea() {
@@ -556,8 +566,8 @@ function appendLoadingTurn(modeName) {
   loading.className = "message-turn bot-turn";
   loading.id = "activeLoadingTurn";
 
-  const loadingText = activeEngine === "local_qwen"
-    ? "Mô hình Qwen2.5-VL-7B đang suy luận trực tiếp trên GPU máy..."
+  const loadingText = activeEngine === "hf_qwen"
+    ? "Qwen2.5-VL-7B đang suy luận qua HuggingFace Inference API..."
     : "Mô hình đang phân tích điểm ảnh và suy luận trực tiếp qua Cloud VLM API...";
 
   loading.innerHTML = `
@@ -589,7 +599,7 @@ function appendBotTurn(data, modeCfg) {
   const latency = data.latency || "---";
   const formattedAnswer = formatResponseToHtml(data.pred || "---");
   const thoughtText = data.thought || "Mô hình đưa ra kết quả trực tiếp dựa trên nhận diện thị giác thời gian thực.";
-  const modelTag = data.model || (activeEngine === "local_qwen" ? "Qwen2.5-VL-7B (Local GPU)" : "Cloud VLM");
+  const modelTag = data.model || (activeEngine === "hf_qwen" ? "Qwen2.5-VL-7B (HF API)" : "Cloud VLM");
 
   turn.innerHTML = `
     <div class="bot-header-meta">

@@ -378,8 +378,8 @@
           "type": "proposed_routing",
           "overall": 47.8,
           "ci95": [
-            45.9,
-            49.7
+            35.4,
+            43.8
           ],
           "descriptive": 61.1,
           "reasoning": 39.6,
@@ -392,8 +392,8 @@
           "type": "baseline",
           "overall": 47.7,
           "ci95": [
-            45.8,
-            49.6
+            34.6,
+            43.0
           ],
           "descriptive": 61.1,
           "reasoning": 38.8,
@@ -419,8 +419,8 @@
           "type": "cot",
           "overall": 47.2,
           "ci95": [
-            45.3,
-            49.1
+            31.8,
+            40.4
           ],
           "descriptive": 61.1,
           "reasoning": 36.2,
@@ -595,5 +595,84 @@
       "file": "figures/slake_strict_vs_medical_accuracy.png",
       "description": "Độ chính xác chuẩn hóa ngữ nghĩa y khoa (Medical Semantic) phản ánh chính xác năng lực chẩn đoán, đưa Adaptive CoT đạt 57.68%."
     }
-  ]
+  ],
+  "statistical_validation": {
+    "slake_mcnemar": {
+      "test": "McNemar (Yates corrected)",
+      "comparison": "No-CoT vs Adaptive",
+      "chi2": 8.3478,
+      "p_value": 0.003861,
+      "significant": true,
+      "interpretation": "Adaptive significantly better than Direct No-CoT (p=0.0039)"
+    },
+    "charxiv_mcnemar": {
+      "test": "McNemar (Yates corrected)",
+      "comparison": "Direct vs Routed",
+      "chi2": 0.18,
+      "p_value": 0.671373,
+      "significant": false,
+      "interpretation": "Routing does not significantly change per-sample accuracy (p=0.671) — gain comes from routing trade-offs"
+    },
+    "bootstrap_ci_95": {
+      "method": "Percentile bootstrap, 1000 resamples, seed=42",
+      "slake": {
+        "no_cot": [
+          47.5,
+          53.25
+        ],
+        "cot": [
+          42.88,
+          48.92
+        ],
+        "adaptive": [
+          49.67,
+          55.52
+        ]
+      },
+      "charxiv": {
+        "direct": [
+          34.6,
+          43.0
+        ],
+        "cot": [
+          31.8,
+          40.4
+        ],
+        "routed": [
+          35.4,
+          43.8
+        ]
+      }
+    },
+    "text_router_validation": {
+      "method": "TF-IDF(5000, 1-2gram) + LogisticRegression(C=1.0), 60/20/20 stratified split",
+      "slake": {
+        "val_accuracy": 98.5849,
+        "test_accuracy": 97.6526,
+        "note": "Routes based solely on question text; confirms routing is learnable from text features alone"
+      },
+      "charxiv": {
+        "val_accuracy": 77.0,
+        "test_accuracy": 80.0,
+        "note": "Lower accuracy reflects harder routing decision on chart-reasoning questions"
+      }
+    },
+    "slake_proper_split": {
+      "val": {
+        "no_cot": 47.1698,
+        "cot": 46.2264,
+        "adaptive": 50.0
+      },
+      "test": {
+        "no_cot": 53.0516,
+        "cot": 46.4789,
+        "adaptive": 55.8685
+      },
+      "full": {
+        "no_cot": 50.2356,
+        "cot": 45.9001,
+        "adaptive": 52.5919
+      }
+    }
+  }
 }
