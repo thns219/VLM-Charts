@@ -600,6 +600,7 @@
     "slake_mcnemar": {
       "test": "McNemar (Yates corrected)",
       "comparison": "No-CoT vs Adaptive",
+      "sample_size": 1061,
       "chi2": 8.3478,
       "p_value": 0.003861,
       "significant": true,
@@ -608,70 +609,75 @@
     "charxiv_mcnemar": {
       "test": "McNemar (Yates corrected)",
       "comparison": "Direct vs Routed",
+      "sample_size": 500,
       "chi2": 0.18,
       "p_value": 0.671373,
       "significant": false,
-      "interpretation": "Routing does not significantly change per-sample accuracy (p=0.671) — gain comes from routing trade-offs"
+      "interpretation": "Routing does not significantly change per-sample accuracy (p=0.671) — gain is structural and bottlenecked by routing errors"
     },
     "bootstrap_ci_95": {
       "method": "Percentile bootstrap, 1000 resamples, seed=42",
       "slake": {
-        "no_cot": [
-          47.5,
-          53.25
-        ],
-        "cot": [
-          42.88,
-          48.92
-        ],
-        "adaptive": [
-          49.67,
-          55.52
-        ]
+        "no_cot": [47.5, 53.25],
+        "cot": [42.88, 48.92],
+        "adaptive": [49.67, 55.52]
       },
       "charxiv": {
-        "direct": [
-          34.6,
-          43.0
-        ],
-        "cot": [
-          31.8,
-          40.4
-        ],
-        "routed": [
-          35.4,
-          43.8
-        ]
+        "direct": [34.59, 43.0],
+        "cot": [31.8, 40.4],
+        "routed": [35.4, 43.8],
+        "oracle_bound": [44.8, 53.6]
       }
     },
-    "text_router_validation": {
-      "method": "TF-IDF(5000, 1-2gram) + LogisticRegression(C=1.0), 60/20/20 stratified split",
-      "slake": {
-        "val_accuracy": 98.5849,
-        "test_accuracy": 97.6526,
-        "note": "Routes based solely on question text; confirms routing is learnable from text features alone"
-      },
-      "charxiv": {
-        "val_accuracy": 77.0,
-        "test_accuracy": 80.0,
-        "note": "Lower accuracy reflects harder routing decision on chart-reasoning questions"
+    "charxiv_multimodal_ablation": {
+      "method": "Text (TF-IDF 2500) + Visual Complexity (Edge density, Laplacian variance, Entropy), 60/20/20 split",
+      "support": {"train": 300, "val": 100, "test": 100},
+      "vision_only": {"accuracy": 40.0, "macro_f1": 39.78},
+      "text_only": {"accuracy": 88.0, "macro_f1": 87.82},
+      "multimodal": {
+        "accuracy": 88.0,
+        "macro_f1": 87.92,
+        "weighted_f1": 87.99,
+        "confusion_matrix": [[48, 4], [8, 40]],
+        "precision": {"direct": 85.71, "adaptive_cot": 90.91},
+        "recall": {"direct": 92.31, "adaptive_cot": 83.33}
       }
     },
-    "slake_proper_split": {
-      "val": {
-        "no_cot": 47.1698,
-        "cot": 46.2264,
-        "adaptive": 50.0
+    "slake_demystified": {
+      "regex_baseline": {
+        "accuracy": 94.82,
+        "macro_f1": 94.42,
+        "note": "Leading auxiliary verb regex matches 94.82% due to syntactic regularity of SLAKE"
       },
-      "test": {
-        "no_cot": 53.0516,
-        "cot": 46.4789,
-        "adaptive": 55.8685
+      "ml_router": {
+        "accuracy": 97.65,
+        "macro_f1": 97.73,
+        "weighted_f1": 97.67,
+        "support": {"train": 636, "val": 212, "test": 213}
       },
-      "full": {
-        "no_cot": 50.2356,
-        "cot": 45.9001,
-        "adaptive": 52.5919
+      "overthinking_mitigation": {
+        "closed_questions_count": 416,
+        "closed_cot_drop": -7.69,
+        "closed_no_cot_acc": 69.47,
+        "closed_cot_acc": 61.78,
+        "closed_adaptive_acc": 71.15,
+        "note": "Router prevents severe CoT overthinking drop (-7.69%) on closed medical queries"
+      }
+    },
+    "charxiv_error_cascade": {
+      "competence_distribution": {
+        "both_correct_pct": 23.4,
+        "direct_only_pct": 15.4,
+        "cot_only_pct": 12.8,
+        "both_wrong_pct": 48.4
+      },
+      "frontiers": {
+        "direct_acc": 38.8,
+        "cot_acc": 36.2,
+        "routed_acc": 39.6,
+        "oracle_ceiling": 49.2,
+        "routing_regret_pct": 9.6,
+        "lost_samples_count": 48
       }
     }
   }
