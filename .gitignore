@@ -25,6 +25,8 @@ rescore_slake_medical.py
 # Local Secrets / API Keys
 api_key.txt
 demo/api_key.txt
+demo/hf_token.txt
+hf_token.txt
 .env
 .env.*
 
