@@ -438,7 +438,10 @@ def run_hf_qwen_inference(question, image_b64, route):
             "error": f"HF API lỗi: {str(e)}. Vui lòng kiểm tra HF_TOKEN hoặc thử lại sau.",
             "model": "Qwen2.5-VL-7B (HF API)",
             "route": route
-        }def probe_nvidia_smi():
+        }
+
+
+def probe_nvidia_smi():
     """Truy vấn thông số GPU vật lý qua nvidia-smi (kể cả khi PyTorch chưa cài CUDA)."""
     try:
         res = subprocess.run(
