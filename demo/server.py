@@ -1,24 +1,34 @@
 # -*- coding: utf-8 -*-
 """demo/server.py — Máy chủ Backend cho ứng dụng Hỏi Đáp Thị Giác VLM (VQA Demo).
 
-KIẾN TRÚC & NGUYÊN LÝ HOẠT ĐỘNG CỦA BẢN DEMO:
-1. Giao diện trực tiếp (Live Inference): Bản web tương tác này gọi trực tiếp mô hình
-   đa phương thức Gemini qua Google GenAI API (gemini-2.5-flash hoặc gemini-3.5-flash-lite)
-   để đem lại trải nghiệm phản hồi tương tác thời gian thực mà không đòi hỏi GPU máy trạm cấu hình cao.
-2. Phân biệt 3 chế độ bằng Prompt Engineering:
-   - No-CoT: Prompt yêu cầu mô hình đưa ra đáp án trực tiếp, ngắn gọn, không giải thích.
-   - Standard CoT: Prompt yêu cầu mô hình phân rã thành 3 bước (Quan sát -> Phân tích -> Kết luận).
-   - Adaptive: Prompt hướng dẫn mô hình tự đánh giá độ phức tạp thị giác của câu hỏi (trả lời
-     thẳng cho câu hỏi nhận diện trực quan/nhãn; quan sát và suy luận cẩn trọng cho câu hỏi số liệu/tọa độ).
-   *LƯU Ý QUAN TRỌNG*: Phiên demo trực tiếp KHÔNG nạp cục bộ mô hình Qwen2.5-VL-7B, KHÔNG nạp trọng số
-   LoRA adapter, và KHÔNG kích hoạt bộ định tuyến tự động offline từ mục 3.4.
-3. Mốc chuẩn hiển thị trên thanh chế độ:
-   Các tỷ lệ chính xác (52.59% / 39.60%; 50.24% / 38.80%; 45.90% / 36.20%) là KẾT QUẢ ĐÁNH GIÁ
-   THỰC NGHIỆM NGOẠI TUYẾN (Offline Benchmark) của mô hình mã nguồn mở Qwen2.5-VL-7B trên 1.061 câu
-   hỏi SLAKE và 500 câu hỏi suy luận CharXiv, được gắn vào giao diện làm mốc tham chiếu khoa học đối chứng.
-4. Về phần cứng: Vận hành cục bộ Qwen 4-bit cần GPU đơn (như NVIDIA Tesla T4).
+KIẾN TRÚC & NGUYÊN LÝ HOẠT ĐỘNG CỦA BẢN DEMO (HỆ THỐNG DUAL-ENGINE):
+1. Kiến trúc Song Mã (Dual-Engine Architecture):
+   - Engine 1 (Cloud VLM API): Sử dụng mô hình đa phương thức Gemini qua Google GenAI API
+     (gemini-2.5-flash hoặc gemini-3.5-flash-lite) để cung cấp phản hồi tương tác tức thì
+     trên mọi máy tính (kể cả máy không có GPU rời hoặc GPU < 8GB VRAM).
+   - Engine 2 (Local Qwen2.5-VL GPU): Cho phép nạp cục bộ mô hình mã nguồn mở Qwen2.5-VL-7B-Instruct
+     (lượng tử hóa 4-bit NF4) và tự động tích hợp trọng số LoRA adapter nếu có trong thư mục models/.
+     Hệ thống tích hợp module đo kiểm phần cứng (Hardware Telemetry qua PyTorch CUDA & nvidia-smi)
+     để kiểm tra ngưỡng VRAM khả dụng (khuyến nghị >= 8GB VRAM như Tesla T4 hoặc RTX 3090/4090).
 
-Khởi chạy độc lập:
+2. Cơ chế Định Tuyến Tự Động (Adaptive Dynamic Router):
+   - Khi chạy ở chế độ Adaptive (Tự Thích Ứng):
+     + Đối với câu hỏi tính toán, số học, tọa độ: Kích hoạt nhánh suy luận có cấu trúc 3 bước
+       (Target -> Grounding -> Deduction). Nếu nạp thành công trọng số LoRA adapter, nhánh này
+       hoạt động như Adaptive LoRA CoT; nếu chưa có LoRA, hệ thống suy luận bằng mô hình Qwen gốc
+       (Adaptive CoT) và ghi rõ xuất xứ trọng số để đảm bảo tính trung thực khoa học.
+     + Đối với câu hỏi trực quan, nhãn, văn bản: Kích hoạt nhánh Direct Zero-Shot (No-CoT)
+       nhằm trả lời ngắn gọn, trực diện, triệt tiêu hiện tượng overthinking.
+   - Khi chạy qua Cloud API: Phân tách 3 chế độ (Adaptive, No-CoT, CoT) thông qua Prompt Engineering
+     chuyên biệt mô phỏng tương đương cơ chế định tuyến của đề tài.
+
+3. Mốc chuẩn khoa học đối chứng (Offline Benchmarks):
+   - Các chỉ số tỷ lệ chính xác (Adaptive: SLAKE 52.59% / CharXiv 39.60%; No-CoT: 50.24% / 38.80%;
+     CoT: 45.90% / 36.20%) là kết quả đánh giá thực nghiệm ngoại tuyến của mô hình Qwen2.5-VL-7B
+     sau tinh chỉnh trên tập kiểm thử (1.061 câu hỏi SLAKE và 500 câu hỏi CharXiv), được tích hợp
+     làm mốc tham chiếu khoa học đối chứng.
+
+Khởi chạy máy chủ:
     python demo/server.py
 Hoặc từ thư mục gốc:
     python run_demo.py
@@ -491,7 +501,7 @@ def run_local_qwen_inference(pil_image, question, mode="adaptive"):
         ])
         if is_numerical:
             routed_mode = "cot"
-            routed_reason = "Router tự động nhận diện câu hỏi Số học -> Kích hoạt nhánh suy luận 3 bước Adaptive LoRA CoT."
+            routed_reason = "Router tự động nhận diện câu hỏi Số học -> Kích hoạt nhánh suy luận 3 bước CoT."
         else:
             routed_mode = "no_cot"
             routed_reason = "Router tự động nhận diện câu hỏi Nhãn/Văn bản -> Kích hoạt nhánh Direct Zero-Shot để triệt tiêu overthinking."
@@ -521,6 +531,25 @@ def run_local_qwen_inference(pil_image, question, mode="adaptive"):
             f"(Phát hiện GPU: {hw['gpu_name']} - {hw['vram_gb']} GB VRAM; Yêu cầu >= 8GB VRAM). "
             "Gợi ý: Hãy chuyển sang Cloud VLM API để trải nghiệm tức thì."
         )
+
+    # Cập nhật nhãn lý do định tuyến chính xác theo tình trạng nạp LoRA thực tế
+    has_lora = bool(ENGINE_STATE.get("lora_loaded"))
+    if routed_mode == "cot":
+        if mode == "adaptive":
+            if has_lora:
+                routed_reason = "Router tự động nhận diện câu hỏi Số học -> Kích hoạt nhánh suy luận 3 bước Adaptive LoRA CoT (đã nạp trọng số LoRA adapter)."
+            else:
+                routed_reason = "Router tự động nhận diện câu hỏi Số học -> Kích hoạt nhánh suy luận 3 bước Adaptive CoT (mô hình Qwen gốc, chưa nạp LoRA adapter)."
+        else:
+            if has_lora:
+                routed_reason = "Chế độ Standard CoT + LoRA (suy luận 3 bước với trọng số LoRA adapter)."
+            else:
+                routed_reason = "Chế độ Standard CoT (suy luận 3 bước trên mô hình Qwen gốc, chưa nạp LoRA adapter)."
+    else:
+        if mode == "adaptive":
+            routed_reason = "Router tự động nhận diện câu hỏi Nhãn/Văn bản -> Kích hoạt nhánh Direct Zero-Shot để triệt tiêu overthinking."
+        else:
+            routed_reason = "Chế độ Direct Zero-Shot (No-CoT): Trả lời trực tiếp ngắn gọn, không giải thích."
 
     import torch
     from qwen_vl_utils import process_vision_info
