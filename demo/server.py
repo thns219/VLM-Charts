@@ -50,7 +50,8 @@ from PIL import Image, ImageOps
 # ==============================================================================
 # HuggingFace Inference API — Qwen2.5-VL-7B-Instruct (không cần GPU local)
 # ==============================================================================
-HF_API_URL = "https://router.huggingface.co/novita/v3/openai/chat/completions"
+HF_API_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-VL-7B-Instruct/v1/chat/completions"
+HF_API_URL_FALLBACK = "https://router.huggingface.co/novita/v3/openai/chat/completions"
 HF_MODEL = "Qwen/Qwen2.5-VL-7B-Instruct"
 
 def get_hf_token():
@@ -432,8 +433,20 @@ def run_hf_qwen_inference(question, image_b64, route):
 
     t0 = time.time()
     try:
-        resp = _requests.post(HF_API_URL, headers=headers, json=payload, timeout=90)
-        resp.raise_for_status()
+        # Thử endpoint chính (api-inference.huggingface.co)
+        last_err = None
+        resp = None
+        for url in [HF_API_URL, HF_API_URL_FALLBACK]:
+            try:
+                resp = _requests.post(url, headers=headers, json=payload, timeout=90)
+                resp.raise_for_status()
+                break  # thành công
+            except Exception as e:
+                last_err = e
+                resp = None
+                continue
+        if resp is None:
+            raise last_err
         data = resp.json()
         answer = data["choices"][0]["message"]["content"]
         elapsed = round(time.time() - t0, 2)
