@@ -327,11 +327,282 @@ def run_live_gemini_vqa(pil_image, question, mode="adaptive", api_key=None):
     raise RuntimeError(f"Lỗi gọi Gemini API: {last_err}")
 
 
+# ==============================================================================
+# HỆ THỐNG DUAL-ENGINE: QUẢN LÝ PHẦN CỨNG & MÔ HÌNH QWEN2.5-VL CỤC BỘ
+# ==============================================================================
+import subprocess
+
+def probe_nvidia_smi():
+    """Truy vấn thông số GPU vật lý qua nvidia-smi (kể cả khi PyTorch chưa cài CUDA)."""
+    try:
+        res = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, check=True, timeout=3
+        )
+        lines = res.stdout.strip().split("\n")
+        if lines and lines[0]:
+            name, mem = [x.strip() for x in lines[0].split(",")]
+            vram_mb = int(mem)
+            return {
+                "detected": True,
+                "name": name,
+                "vram_mb": vram_mb,
+                "vram_gb": round(vram_mb / 1024, 2)
+            }
+    except Exception:
+        pass
+    return {"detected": False, "name": "N/A", "vram_mb": 0, "vram_gb": 0.0}
+
+
+def get_hardware_telemetry():
+    """Kiểm tra toàn diện môi trường phần cứng: CUDA, VRAM và tính sẵn sàng cho Qwen 7B."""
+    torch_cuda = False
+    gpu_name = "Không phát hiện GPU"
+    vram_gb = 0.0
+    cuda_ver = "N/A"
+
+    try:
+        import torch
+        if torch.cuda.is_available():
+            torch_cuda = True
+            gpu_name = torch.cuda.get_device_name(0)
+            vram_bytes = torch.cuda.get_device_properties(0).total_memory
+            vram_gb = round(vram_bytes / (1024 ** 3), 2)
+            cuda_ver = getattr(torch.version, "cuda", "N/A") or "N/A"
+    except Exception:
+        pass
+
+    # Nếu PyTorch chưa thấy CUDA, kiểm tra phần cứng vật lý qua nvidia-smi
+    smi = probe_nvidia_smi()
+    if not torch_cuda and smi["detected"]:
+        gpu_name = smi["name"]
+        vram_gb = smi["vram_gb"]
+
+    # Qwen2.5-VL-7B lượng tử hóa 4-bit NF4 cần tối thiểu ~7.5 - 8.0 GB VRAM để chạy mượt mà
+    is_sufficient = (vram_gb >= 7.5) and torch_cuda
+
+    return {
+        "gpu_available": torch_cuda or smi["detected"],
+        "torch_cuda": torch_cuda,
+        "gpu_name": gpu_name,
+        "vram_gb": vram_gb,
+        "cuda_version": cuda_ver,
+        "is_sufficient_for_7b": is_sufficient,
+        "recommended_vram": "8.0 GB (Tesla T4 hoặc RTX 3090/4090/A100)"
+    }
+
+
+# Trạng thái toàn cục của hệ thống Dual-Engine
+ENGINE_STATE = {
+    "active_engine": "cloud",  # "cloud" hoặc "local_qwen"
+    "local_model": None,
+    "local_processor": None,
+    "local_status": "unloaded",  # "unloaded", "loading", "ready", "error"
+    "local_error": None,
+    "lora_loaded": False,
+    "lora_path": None
+}
+
+
+def load_local_qwen_model():
+    """Tải cục bộ mô hình Qwen2.5-VL-7B-Instruct 4-bit NF4 và nạp trọng số LoRA nếu có."""
+    global ENGINE_STATE
+    if ENGINE_STATE["local_status"] == "ready" and ENGINE_STATE["local_model"] is not None:
+        return ENGINE_STATE["local_model"], ENGINE_STATE["local_processor"]
+
+    ENGINE_STATE["local_status"] = "loading"
+    try:
+        import torch
+        from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor, BitsAndBytesConfig
+
+        model_id = "Qwen/Qwen2.5-VL-7B-Instruct"
+        print(f"[*] Đang khởi tạo nạp mô hình Qwen cục bộ: {model_id}...")
+
+        hw = get_hardware_telemetry()
+        if hw["torch_cuda"]:
+            quant_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.float16,
+                bnb_4bit_quant_type="nf4",
+            )
+            device_map = "auto"
+            torch_dtype = torch.float16
+        else:
+            quant_config = None
+            device_map = "cpu"
+            torch_dtype = torch.float32
+
+        model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+            model_id,
+            quantization_config=quant_config,
+            device_map=device_map,
+            torch_dtype=torch_dtype,
+            low_cpu_mem_usage=True
+        )
+        processor = AutoProcessor.from_pretrained(model_id)
+
+        # Kiểm tra nạp LoRA adapter nếu có trong thư mục models
+        lora_candidates = [
+            os.path.join(BASE_DIR, "models", "lora_adapter"),
+            os.path.join(BASE_DIR, "models", "lora_charts_output"),
+            os.path.join(BASE_DIR, "lora_output"),
+        ]
+        lora_loaded = False
+        lora_path = None
+        for candidate in lora_candidates:
+            if os.path.exists(candidate) and os.path.isdir(candidate):
+                try:
+                    from peft import PeftModel
+                    model = PeftModel.from_pretrained(model, candidate)
+                    lora_loaded = True
+                    lora_path = candidate
+                    print(f"[+] Đã nạp thành công LoRA adapter từ: {candidate}")
+                    break
+                except Exception as lora_err:
+                    print(f"[!] Không thể nạp LoRA từ {candidate}: {lora_err}")
+
+        ENGINE_STATE["local_model"] = model
+        ENGINE_STATE["local_processor"] = processor
+        ENGINE_STATE["local_status"] = "ready"
+        ENGINE_STATE["lora_loaded"] = lora_loaded
+        ENGINE_STATE["lora_path"] = lora_path
+        ENGINE_STATE["local_error"] = None
+        return model, processor
+
+    except Exception as e:
+        ENGINE_STATE["local_status"] = "error"
+        ENGINE_STATE["local_error"] = str(e)
+        raise e
+
+
+def run_local_qwen_inference(pil_image, question, mode="adaptive"):
+    """Thực thi suy luận 100% cục bộ trên mô hình Qwen2.5-VL-7B với cơ chế Router thật."""
+    t0 = time.time()
+    meta = MODE_BENCHMARKS.get(mode, MODE_BENCHMARKS["adaptive"])
+
+    # 1. Cơ chế Dynamic Router thực tế (Phân tích câu hỏi tự động)
+    routed_mode = mode
+    routed_reason = "Theo chế độ người dùng lựa chọn."
+    if mode == "adaptive":
+        # Nhận diện câu hỏi tính toán / số học vs câu hỏi nhận thức nhãn / trực quan
+        is_numerical = any(kw in question.lower() for kw in [
+            "how many", "what is the value", "difference", "average", "maximum", "minimum",
+            "sum", "calculate", "count", "score", "rate", "percentage", "%", "tính", "bao nhiêu", "đếm"
+        ])
+        if is_numerical:
+            routed_mode = "cot"
+            routed_reason = "Router tự động nhận diện câu hỏi Số học -> Kích hoạt nhánh suy luận 3 bước Adaptive LoRA CoT."
+        else:
+            routed_mode = "no_cot"
+            routed_reason = "Router tự động nhận diện câu hỏi Nhãn/Văn bản -> Kích hoạt nhánh Direct Zero-Shot để triệt tiêu overthinking."
+
+    # 2. Xây dựng prompt có cấu trúc theo mô hình Qwen đề tài
+    if routed_mode == "no_cot":
+        sys_instruction = (
+            "You are looking at a chart or medical image. "
+            "Answer the question with the SHORTEST possible answer (a single word, short phrase, or number) — no explanation."
+        )
+    else:
+        sys_instruction = (
+            "Analyze the image step-by-step with structured reasoning:\n"
+            "Target: Identify the target entity or curve to observe.\n"
+            "Grounding: Read coordinate values, ticks, or visual legend markers carefully.\n"
+            "Deduction: Perform arithmetic deduction or comparison.\n"
+            "Answer: State the final concise answer."
+        )
+
+    # 3. Nạp mô hình & chuẩn bị dữ liệu
+    try:
+        model, processor = load_local_qwen_model()
+    except Exception as err:
+        hw = get_hardware_telemetry()
+        raise RuntimeError(
+            f"Không thể khởi chạy Local Qwen: {err}. "
+            f"(Phát hiện GPU: {hw['gpu_name']} - {hw['vram_gb']} GB VRAM; Yêu cầu >= 8GB VRAM). "
+            "Gợi ý: Hãy chuyển sang Cloud VLM API để trải nghiệm tức thì."
+        )
+
+    import torch
+    from qwen_vl_utils import process_vision_info
+
+    # Giới hạn kích thước ảnh phù hợp VRAM
+    img_ready = pil_image.copy()
+    if max(img_ready.size) > 1024:
+        scale = 1024 / max(img_ready.size)
+        img_ready = img_ready.resize((int(img_ready.width * scale), int(img_ready.height * scale)))
+
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "image", "image": img_ready},
+                {"type": "text", "text": f"{sys_instruction}\n\nQuestion: {question}\nAnswer:"}
+            ]
+        }
+    ]
+
+    text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    image_inputs, video_inputs = process_vision_info(messages)
+    inputs = processor(
+        text=[text],
+        images=image_inputs,
+        videos=video_inputs,
+        padding=True,
+        return_tensors="pt"
+    )
+
+    if torch.cuda.is_available():
+        inputs = inputs.to("cuda")
+
+    with torch.no_grad():
+        generated_ids = model.generate(**inputs, max_new_tokens=256, do_sample=False)
+        generated_ids_trimmed = [
+            out_ids[len(in_ids):] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+        ]
+        raw_output = processor.batch_decode(
+            generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+        )[0].strip()
+
+    elapsed = round(time.time() - t0, 2)
+    clean_text = clean_latex_and_symbols(raw_output)
+
+    lora_badge = " + LoRA" if ENGINE_STATE.get("lora_loaded") else ""
+    return {
+        "pred": clean_text,
+        "thought": f"🖥️ [Local Qwen2.5-VL GPU] {routed_reason}\n\nChuỗi sinh từ mô hình cục bộ:\n{clean_text}",
+        "latency": f"{elapsed} giây (Local GPU)",
+        "model": f"Qwen2.5-VL-7B-Instruct (4-bit NF4{lora_badge})",
+        "engine": "local_qwen",
+        "mode": mode,
+        "mode_name": meta["name"],
+        "charxiv_acc": meta["charxiv_acc"],
+        "slake_acc": meta["slake_acc"],
+        "benchmark_info": f"Mô hình cục bộ Qwen2.5-VL-7B (Local GPU) | Mốc offline: SLAKE {meta['slake_acc']} · CharXiv {meta['charxiv_acc']}"
+    }
+
+
 class DemoHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
+
+        # API trạng thái hệ thống và đo kiểm phần cứng GPU
+        if path == "/api/engine_status":
+            hw = get_hardware_telemetry()
+            data = {
+                "active_engine": ENGINE_STATE["active_engine"],
+                "hardware": hw,
+                "local_status": ENGINE_STATE["local_status"],
+                "local_error": ENGINE_STATE["local_error"],
+                "lora_loaded": ENGINE_STATE["lora_loaded"],
+                "lora_path": ENGINE_STATE["lora_path"]
+            }
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.end_headers()
+            self.wfile.write(json.dumps(data, ensure_ascii=False).encode("utf-8"))
+            return
 
         # Xử lý phục vụ ảnh: /api/image hoặc đường dẫn ảnh trực tiếp
         if path == "/api/image" or path.startswith("/charxiv_all_images/") or path.startswith("/imgs/") or path.startswith("/sample_images/"):
@@ -385,6 +656,28 @@ class DemoHandler(BaseHTTPRequestHandler):
         content_length = int(self.headers.get("Content-Length", 0))
         post_body = self.rfile.read(content_length)
 
+        # Cấu hình đổi Engine suy luận: cloud vs local_qwen
+        if parsed.path == "/api/set_engine":
+            try:
+                payload = json.loads(post_body.decode("utf-8"))
+                target = payload.get("engine", "cloud")
+                if target not in ["cloud", "local_qwen"]:
+                    raise ValueError("Engine không hợp lệ. Chỉ chấp nhận 'cloud' hoặc 'local_qwen'.")
+                ENGINE_STATE["active_engine"] = target
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "status": "success",
+                    "active_engine": target
+                }, ensure_ascii=False).encode("utf-8"))
+            except Exception as e:
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}, ensure_ascii=False).encode("utf-8"))
+            return
+
         if parsed.path == "/api/vqa":
             try:
                 payload = json.loads(post_body.decode("utf-8"))
@@ -392,13 +685,17 @@ class DemoHandler(BaseHTTPRequestHandler):
                 image_ref = payload.get("image", "")
                 custom_key = payload.get("api_key", "").strip()
                 mode = payload.get("mode", "adaptive")
+                engine = payload.get("engine", ENGINE_STATE["active_engine"])
 
                 pil_img = load_pil_image(image_ref)
                 if pil_img is None:
                     raise ValueError("Không thể tìm thấy hoặc đọc hình ảnh đầu vào.")
 
-                # Gọi trực tiếp mô hình AI thật theo hình thức được chọn
-                response_data = run_live_gemini_vqa(pil_img, question, mode=mode, api_key=custom_key)
+                # Gọi trực tiếp mô hình AI thật theo Engine được chọn
+                if engine == "local_qwen":
+                    response_data = run_local_qwen_inference(pil_img, question, mode=mode)
+                else:
+                    response_data = run_live_gemini_vqa(pil_img, question, mode=mode, api_key=custom_key)
 
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")

@@ -8,6 +8,9 @@ let currentImageName = "Biểu đồ Covid (CharXiv)";
 let selectedMode = "adaptive";
 let modalActiveImage = null;
 
+let activeEngine = "cloud"; // "cloud" | "local_qwen"
+let hwTelemetry = null;
+
 const MODE_CONFIG = {
   adaptive: {
     name: "Adaptive (Tự thích ứng)",
@@ -45,6 +48,15 @@ const btnAttach = document.getElementById("btnAttach");
 const promptInput = document.getElementById("promptInput");
 const btnSend = document.getElementById("btnSend");
 
+// Engine & Hardware Telemetry Elements
+const engineSwitch = document.getElementById("engineSwitch");
+const btnEngineCloud = document.getElementById("btnEngineCloud");
+const btnEngineLocal = document.getElementById("btnEngineLocal");
+const hwChip = document.getElementById("hwChip");
+const hwDot = document.getElementById("hwDot");
+const hwText = document.getElementById("hwText");
+const footerNote = document.getElementById("footerNote");
+
 // Lightbox Modal Elements
 const imageModal = document.getElementById("imageModal");
 const imageModalImg = document.getElementById("imageModalImg");
@@ -53,9 +65,18 @@ const btnModalClose = document.getElementById("btnModalClose");
 const btnModalOpenTab = document.getElementById("btnModalOpenTab");
 const btnModalUseImage = document.getElementById("btnModalUseImage");
 
+// Hardware Diagnostic Modal Elements
+const hwModal = document.getElementById("hwModal");
+const btnHwModalClose = document.getElementById("btnHwModalClose");
+const btnDiagUseCloud = document.getElementById("btnDiagUseCloud");
+const btnDiagForceLocal = document.getElementById("btnDiagForceLocal");
+const diagGpuName = document.getElementById("diagGpuName");
+const diagGpuVram = document.getElementById("diagGpuVram");
+
 document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
   updateAttachmentUI();
+  checkEngineStatus();
 });
 
 function setupEventListeners() {
@@ -67,6 +88,53 @@ function setupEventListeners() {
       modeNav.querySelectorAll(".mode-pill").forEach(p => p.classList.remove("active"));
       pill.classList.add("active");
       selectedMode = pill.dataset.mode || "adaptive";
+      updateEngineSwitchUI();
+    });
+  }
+
+  // 1b. Chuyển đổi Dual-Engine: Cloud VLM vs Local Qwen 7B
+  if (btnEngineCloud) {
+    btnEngineCloud.addEventListener("click", () => {
+      setEngine("cloud");
+    });
+  }
+
+  if (btnEngineLocal) {
+    btnEngineLocal.addEventListener("click", () => {
+      if (hwTelemetry && !hwTelemetry.is_sufficient_for_7b) {
+        openHwModal();
+      } else {
+        setEngine("local_qwen");
+      }
+    });
+  }
+
+  // 1c. Click vào GPU Telemetry Chip để mở Modal chẩn đoán phần cứng
+  if (hwChip) {
+    hwChip.addEventListener("click", openHwModal);
+  }
+
+  if (btnHwModalClose) {
+    btnHwModalClose.addEventListener("click", closeHwModal);
+  }
+
+  if (btnDiagUseCloud) {
+    btnDiagUseCloud.addEventListener("click", () => {
+      setEngine("cloud");
+      closeHwModal();
+    });
+  }
+
+  if (btnDiagForceLocal) {
+    btnDiagForceLocal.addEventListener("click", () => {
+      setEngine("local_qwen");
+      closeHwModal();
+    });
+  }
+
+  if (hwModal) {
+    hwModal.addEventListener("click", (e) => {
+      if (e.target === hwModal) closeHwModal();
     });
   }
 
@@ -160,6 +228,7 @@ function setupEventListeners() {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeImageModal();
+      closeHwModal();
     }
   });
 
@@ -205,6 +274,98 @@ function openImageModal(imgSrc, title = "Xem hình ảnh chi tiết") {
 function closeImageModal() {
   if (imageModal) {
     imageModal.style.display = "none";
+  }
+}
+
+// ==============================================================================
+// Quản lý Dual-Engine & Chẩn đoán phần cứng GPU
+// ==============================================================================
+function openHwModal() {
+  if (hwModal) hwModal.style.display = "flex";
+}
+
+function closeHwModal() {
+  if (hwModal) hwModal.style.display = "none";
+}
+
+async function checkEngineStatus() {
+  try {
+    const res = await fetch("/api/engine_status");
+    if (!res.ok) return;
+    const data = await res.json();
+    hwTelemetry = data.hardware;
+    activeEngine = data.active_engine || "cloud";
+    updateEngineSwitchUI();
+    updateHardwareChipUI();
+  } catch (e) {
+    console.error("Lỗi kiểm tra phần cứng:", e);
+    if (hwText) hwText.textContent = "Không thể đọc GPU";
+  }
+}
+
+function updateHardwareChipUI() {
+  if (!hwChip || !hwDot || !hwText) return;
+  if (!hwTelemetry) {
+    hwText.textContent = "Không phát hiện GPU";
+    hwDot.className = "hw-dot dot-warning";
+    return;
+  }
+
+  const name = hwTelemetry.gpu_name || "N/A";
+  const vram = hwTelemetry.vram_gb || 0;
+  const isSufficient = hwTelemetry.is_sufficient_for_7b;
+  let shortName = name.replace("NVIDIA GeForce ", "").replace("Laptop GPU", "Laptop");
+
+  if (isSufficient) {
+    hwDot.className = "hw-dot dot-ready";
+    hwText.textContent = `GPU: ${shortName} (${vram} GB) · Đủ chuẩn Qwen 7B`;
+    hwChip.title = `GPU: ${name} (${vram} GB VRAM) - Đạt chuẩn suy luận Qwen2.5-VL-7B (>=8GB)`;
+  } else if (hwTelemetry.gpu_available) {
+    hwDot.className = "hw-dot dot-warning";
+    hwText.textContent = `GPU: ${shortName} (${vram} GB) · Khuyến nghị Cloud`;
+    hwChip.title = `GPU phát hiện: ${name} (${vram} GB VRAM). Yêu cầu Qwen 7B là >=8GB. Nhấp để xem chi tiết.`;
+  } else {
+    hwDot.className = "hw-dot dot-warning";
+    hwText.textContent = "CPU · Khuyến nghị Cloud";
+    hwChip.title = "Không có GPU rời. Khuyến nghị chạy qua Cloud VLM API.";
+  }
+
+  if (diagGpuName) diagGpuName.textContent = name;
+  if (diagGpuVram) diagGpuVram.textContent = `${vram} GB VRAM (${hwTelemetry.torch_cuda ? "CUDA khả dụng" : "Driver SMI phát hiện"})`;
+}
+
+function updateEngineSwitchUI() {
+  if (btnEngineCloud && btnEngineLocal) {
+    if (activeEngine === "local_qwen") {
+      btnEngineLocal.classList.add("active");
+      btnEngineCloud.classList.remove("active");
+      if (footerNote) {
+        footerNote.innerHTML = `Mô hình: <strong>Qwen2.5-VL-7B (Local GPU)</strong> · Định tuyến: <strong>${selectedMode.toUpperCase()}</strong> · Mốc thực nghiệm ngoại tuyến: SLAKE 52.59% · CharXiv 39.60%`;
+      }
+    } else {
+      btnEngineCloud.classList.add("active");
+      btnEngineLocal.classList.remove("active");
+      if (footerNote) {
+        footerNote.innerHTML = `Giao diện tương tác trực tiếp qua <strong>Gemini API</strong> · Mốc chuẩn thực nghiệm ngoại tuyến (Qwen2.5-VL-7B): SLAKE 52.59% · CharXiv 39.60% (Adaptive Routing)`;
+      }
+    }
+  }
+}
+
+async function setEngine(engine) {
+  try {
+    const res = await fetch("/api/set_engine", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ engine: engine })
+    });
+    const data = await res.json();
+    if (data.active_engine) {
+      activeEngine = data.active_engine;
+      updateEngineSwitchUI();
+    }
+  } catch (err) {
+    console.error("Lỗi chuyển engine:", err);
   }
 }
 
@@ -395,6 +556,10 @@ function appendLoadingTurn(modeName) {
   loading.className = "message-turn bot-turn";
   loading.id = "activeLoadingTurn";
 
+  const loadingText = activeEngine === "local_qwen"
+    ? "Mô hình Qwen2.5-VL-7B đang suy luận trực tiếp trên GPU máy..."
+    : "Mô hình đang phân tích điểm ảnh và suy luận trực tiếp qua Cloud VLM API...";
+
   loading.innerHTML = `
     <div class="bot-header-meta">
       <div class="bot-meta-left">
@@ -403,7 +568,7 @@ function appendLoadingTurn(modeName) {
     </div>
     <div class="loading-bubble">
       <div class="loading-spinner"></div>
-      <span>Mô hình đang phân tích điểm ảnh và suy luận trực tiếp...</span>
+      <span>${loadingText}</span>
     </div>
   `;
 
@@ -424,14 +589,16 @@ function appendBotTurn(data, modeCfg) {
   const latency = data.latency || "---";
   const formattedAnswer = formatResponseToHtml(data.pred || "---");
   const thoughtText = data.thought || "Mô hình đưa ra kết quả trực tiếp dựa trên nhận diện thị giác thời gian thực.";
+  const modelTag = data.model || (activeEngine === "local_qwen" ? "Qwen2.5-VL-7B (Local GPU)" : "Cloud VLM");
 
   turn.innerHTML = `
     <div class="bot-header-meta">
       <div class="bot-meta-left">
         <span class="meta-mode-badge">${modeName}</span>
+        <span class="meta-acc-badge" style="background:#eff6ff;color:#1e40af;font-weight:600;" title="Mô hình AI thực thi">${modelTag}</span>
         <span class="meta-acc-badge" title="Mốc đánh giá thực nghiệm ngoại tuyến của mô hình Qwen">Mốc Qwen: SLAKE <strong>${slake}</strong> · CharXiv <strong>${charxiv}</strong></span>
       </div>
-      <span class="meta-latency">Thời gian gọi API: ${latency}</span>
+      <span class="meta-latency">Thời gian: ${latency}</span>
     </div>
     <div class="bot-bubble">
       <div class="answer-content">
@@ -512,7 +679,8 @@ async function submitChat() {
       body: JSON.stringify({
         question: text,
         image: currentImage,
-        mode: selectedMode
+        mode: selectedMode,
+        engine: activeEngine
       })
     });
 

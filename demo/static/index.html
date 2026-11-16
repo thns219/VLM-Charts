@@ -15,7 +15,27 @@
   <header class="gemini-header">
     <div class="header-brand">
       <span class="brand-title">Hỏi Đáp Thị Giác VLM</span>
-      <span class="brand-badge">Trực tiếp AI</span>
+      <span class="brand-badge">Dual-Engine</span>
+    </div>
+
+    <!-- Engine Switcher (Cloud API vs Local Qwen 7B) -->
+    <div class="engine-switch" id="engineSwitch">
+      <button type="button" class="btn-engine active" data-engine="cloud" id="btnEngineCloud" title="Sử dụng Gemini API (Tốc độ cao, không tốn VRAM)">
+        <span class="engine-indicator"></span>
+        <span class="engine-label">Cloud VLM</span>
+        <span class="engine-sub">API</span>
+      </button>
+      <button type="button" class="btn-engine" data-engine="local_qwen" id="btnEngineLocal" title="Chạy mô hình Qwen2.5-VL-7B 4-bit + LoRA trực tiếp trên GPU máy">
+        <span class="engine-indicator"></span>
+        <span class="engine-label">Local Qwen 7B</span>
+        <span class="engine-sub">GPU máy trạm</span>
+      </button>
+    </div>
+
+    <!-- GPU Hardware Telemetry Chip -->
+    <div class="hw-chip" id="hwChip" title="Thông số phần cứng GPU và tính sẵn sàng cho Qwen 7B">
+      <span class="hw-dot dot-checking" id="hwDot"></span>
+      <span class="hw-text" id="hwText">Đang quét GPU...</span>
     </div>
 
     <!-- Mode Selector Navigation -->
@@ -117,7 +137,7 @@
         </button>
       </div>
 
-      <div class="footer-note">
+      <div class="footer-note" id="footerNote">
         Giao diện tương tác trực tiếp qua Gemini API · Mốc chuẩn thực nghiệm ngoại tuyến (Qwen2.5-VL-7B): SLAKE 52.59% · CharXiv 39.60% (Adaptive Routing)
       </div>
     </div>
@@ -145,6 +165,46 @@
       </div>
       <div class="image-modal-body">
         <img id="imageModalImg" src="" alt="Hình ảnh phóng to" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Chẩn Đoán Phần Cứng GPU (Hardware Diagnostic Modal) -->
+  <div class="image-modal-backdrop" id="hwModal" style="display: none;">
+    <div class="hw-modal-dialog">
+      <div class="hw-modal-header">
+        <div class="hw-modal-title">Thông Số Phần Cứng Mô Hình Cục Bộ</div>
+        <button type="button" class="btn-modal-close" id="btnHwModalClose" title="Đóng">✕</button>
+      </div>
+      <div class="hw-modal-body">
+        <div class="hw-info-card">
+          <div class="hw-info-row">
+            <span class="hw-label">GPU phát hiện:</span>
+            <span class="hw-val" id="diagGpuName">NVIDIA GeForce RTX 3050 Laptop GPU</span>
+          </div>
+          <div class="hw-info-row">
+            <span class="hw-label">Bộ nhớ đồ họa (VRAM):</span>
+            <span class="hw-val" id="diagGpuVram">4.0 GB VRAM</span>
+          </div>
+          <div class="hw-info-row">
+            <span class="hw-label">Yêu cầu Qwen 7B (4-bit NF4):</span>
+            <span class="hw-val highlight-val">&ge; 7.5 - 8.0 GB VRAM (Tesla T4 / RTX 3090/4090)</span>
+          </div>
+        </div>
+        <div class="hw-warning-box">
+          <strong>Lưu ý kỹ thuật:</strong> Mô hình đa phương thức <strong>Qwen2.5-VL-7B</strong> (kể cả bản 4-bit) cần tối thiểu ~8GB VRAM để nạp đồng thời bộ mã hóa thị giác Vision Transformer và mô hình ngôn ngữ. Trên thiết bị hiện tại (4.0 GB), việc tải mô hình có thể dẫn đến tràn bộ nhớ (CUDA Out of Memory) hoặc phải offload sang CPU gây nghẽn và độ trễ cao.
+        </div>
+        <p class="hw-guide-text">
+          Khuyến nghị: Chế độ <strong>Cloud VLM (Gemini API)</strong> giúp bạn trải nghiệm trực tiếp tức thì với toàn bộ cơ chế <strong>Adaptive Routing</strong> và mốc kiểm chứng khoa học của đề tài.
+        </p>
+      </div>
+      <div class="hw-modal-footer">
+        <button type="button" class="btn-diag-primary" id="btnDiagUseCloud">
+          Dùng Cloud VLM (Khuyến nghị · Phản hồi tức thì)
+        </button>
+        <button type="button" class="btn-diag-secondary" id="btnDiagForceLocal">
+          Vẫn kích hoạt Local Qwen (Thử nghiệm)
+        </button>
       </div>
     </div>
   </div>
