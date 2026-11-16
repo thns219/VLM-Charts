@@ -474,8 +474,22 @@ def run_hf_qwen_inference(question, image_b64, route):
             "benchmark_info": f"Mô hình Qwen2.5-VL-7B qua HuggingFace API | Mốc offline: SLAKE {meta.get('slake_acc','52.59%')} · CharXiv {meta.get('charxiv_acc','39.60%')}"
         }
     except Exception as e:
+        err_str = str(e)
+        # Phân loại lỗi rõ ràng hơn cho người dùng
+        if "NameResolutionError" in err_str or "getaddrinfo failed" in err_str or "Could not resolve" in err_str:
+            user_msg = (
+                "Mạng hiện tại chặn kết nối đến HuggingFace. "
+                "Giải pháp: (1) Dùng VPN rồi thử lại, hoặc "
+                "(2) Chuyển sang engine Cloud VLM (Gemini) vẫn hoạt động bình thường."
+            )
+        elif "401" in err_str or "Unauthorized" in err_str:
+            user_msg = "HF_TOKEN không hợp lệ hoặc hết hạn. Vui lòng tạo token mới tại huggingface.co/settings/tokens."
+        elif "timeout" in err_str.lower():
+            user_msg = "Kết nối đến HuggingFace bị timeout. Thử lại sau hoặc dùng Cloud VLM."
+        else:
+            user_msg = f"Lỗi kết nối HuggingFace: {err_str[:120]}"
         return {
-            "error": f"HF API lỗi: {str(e)}. Vui lòng kiểm tra HF_TOKEN hoặc thử lại sau.",
+            "error": user_msg,
             "model": "Qwen2.5-VL-7B (HF API)",
             "route": route
         }
