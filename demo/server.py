@@ -50,9 +50,12 @@ from PIL import Image, ImageOps
 # ==============================================================================
 # HuggingFace Inference API — Qwen2.5-VL-7B-Instruct (không cần GPU local)
 # ==============================================================================
-HF_TOKEN = os.environ.get("HF_TOKEN", "")
 HF_API_URL = "https://router.huggingface.co/novita/v3/openai/chat/completions"
 HF_MODEL = "Qwen/Qwen2.5-VL-7B-Instruct"
+
+def get_hf_token():
+    """Đọc HF_TOKEN động mỗi lần request (không cache tại startup)."""
+    return os.environ.get("HF_TOKEN", "").strip()
 
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     daemon_threads = True
@@ -352,7 +355,8 @@ import subprocess
 
 def run_hf_qwen_inference(question, image_b64, route):
     """Gọi Qwen2.5-VL-7B qua HuggingFace Inference API (không cần GPU local)."""
-    if not HF_TOKEN:
+    hf_token = get_hf_token()
+    if not hf_token:
         return {
             "error": "HF_TOKEN chưa được cấu hình. Vui lòng đặt biến môi trường HF_TOKEN.",
             "model": "Qwen2.5-VL-7B (HF API)",
@@ -393,7 +397,7 @@ def run_hf_qwen_inference(question, image_b64, route):
     ]
 
     headers = {
-        "Authorization": f"Bearer {HF_TOKEN}",
+        "Authorization": f"Bearer {hf_token}",
         "Content-Type": "application/json"
     }
     payload = {
@@ -726,7 +730,7 @@ class DemoHandler(BaseHTTPRequestHandler):
                 "lora_loaded": ENGINE_STATE["lora_loaded"],
                 "lora_path": ENGINE_STATE["lora_path"],
                 # Thông tin HF API engine
-                "hf_token_configured": bool(HF_TOKEN),
+                "hf_token_configured": bool(get_hf_token()),
                 "qwen_engine": "hf_api",
                 "qwen_model": "Qwen2.5-VL-7B-Instruct",
                 "qwen_via": "HuggingFace Inference API (Novita)"
