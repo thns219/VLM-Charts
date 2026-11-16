@@ -306,7 +306,7 @@ async function checkEngineStatus() {
 function updateHardwareChipUI() {
   if (!hwChip || !hwDot || !hwText) return;
   if (!hwTelemetry) {
-    hwText.textContent = "Không phát hiện GPU";
+    hwText.textContent = "Không có GPU";
     hwDot.className = "hw-dot dot-warning";
     return;
   }
@@ -314,20 +314,20 @@ function updateHardwareChipUI() {
   const name = hwTelemetry.gpu_name || "N/A";
   const vram = hwTelemetry.vram_gb || 0;
   const isSufficient = hwTelemetry.is_sufficient_for_7b;
-  let shortName = name.replace("NVIDIA GeForce ", "").replace("Laptop GPU", "Laptop");
+  let shortName = name.replace("NVIDIA GeForce ", "").replace("Laptop GPU", "").trim();
 
   if (isSufficient) {
     hwDot.className = "hw-dot dot-ready";
-    hwText.textContent = `GPU: ${shortName} (${vram} GB) · Đủ chuẩn Qwen 7B`;
-    hwChip.title = `GPU: ${name} (${vram} GB VRAM) - Đạt chuẩn suy luận Qwen2.5-VL-7B (>=8GB)`;
+    hwText.textContent = `${shortName} (${vram}GB)`;
+    hwChip.title = `GPU: ${name} (${vram} GB VRAM) — Đủ điều kiện chạy Qwen 7B`;
   } else if (hwTelemetry.gpu_available) {
     hwDot.className = "hw-dot dot-warning";
-    hwText.textContent = `GPU: ${shortName} (${vram} GB) · Khuyến nghị Cloud`;
-    hwChip.title = `GPU phát hiện: ${name} (${vram} GB VRAM). Yêu cầu Qwen 7B là >=8GB. Nhấp để xem chi tiết.`;
+    hwText.textContent = `${shortName} (${vram}GB)`;
+    hwChip.title = `GPU: ${name} (${vram} GB VRAM) — Nhấp để xem thông số & chẩn đoán`;
   } else {
     hwDot.className = "hw-dot dot-warning";
-    hwText.textContent = "CPU · Khuyến nghị Cloud";
-    hwChip.title = "Không có GPU rời. Khuyến nghị chạy qua Cloud VLM API.";
+    hwText.textContent = "CPU";
+    hwChip.title = "Không có GPU rời — Khuyến nghị chạy qua Cloud VLM API";
   }
 
   if (diagGpuName) diagGpuName.textContent = name;
@@ -340,13 +340,13 @@ function updateEngineSwitchUI() {
       btnEngineLocal.classList.add("active");
       btnEngineCloud.classList.remove("active");
       if (footerNote) {
-        footerNote.innerHTML = `Mô hình: <strong>Qwen2.5-VL-7B (Local GPU)</strong> · Định tuyến: <strong>${selectedMode.toUpperCase()}</strong> · Mốc thực nghiệm ngoại tuyến: SLAKE 52.59% · CharXiv 39.60%`;
+        footerNote.innerHTML = `Mô hình: <strong>Qwen2.5-VL-7B (Local GPU)</strong> · Chế độ: <strong>${selectedMode.toUpperCase()}</strong> · Mốc chuẩn: SLAKE 52.59% · CharXiv 39.60%`;
       }
     } else {
       btnEngineCloud.classList.add("active");
       btnEngineLocal.classList.remove("active");
       if (footerNote) {
-        footerNote.innerHTML = `Giao diện tương tác trực tiếp qua <strong>Gemini API</strong> · Mốc chuẩn thực nghiệm ngoại tuyến (Qwen2.5-VL-7B): SLAKE 52.59% · CharXiv 39.60% (Adaptive Routing)`;
+        footerNote.innerHTML = `Mô hình: <strong>Cloud VLM (Gemini API)</strong> · Chế độ: <strong>${selectedMode.toUpperCase()}</strong> · Mốc chuẩn: SLAKE 52.59% · CharXiv 39.60%`;
       }
     }
   }
@@ -595,18 +595,22 @@ function appendBotTurn(data, modeCfg) {
     <div class="bot-header-meta">
       <div class="bot-meta-left">
         <span class="meta-mode-badge">${modeName}</span>
-        <span class="meta-acc-badge" style="background:#eff6ff;color:#1e40af;font-weight:600;" title="Mô hình AI thực thi">${modelTag}</span>
-        <span class="meta-acc-badge" title="Mốc đánh giá thực nghiệm ngoại tuyến của mô hình Qwen">Mốc Qwen: SLAKE <strong>${slake}</strong> · CharXiv <strong>${charxiv}</strong></span>
+        <span class="meta-model-badge">${modelTag}</span>
       </div>
-      <span class="meta-latency">Thời gian: ${latency}</span>
+      <span class="meta-latency">${latency}</span>
     </div>
     <div class="bot-bubble">
       <div class="answer-content">
         ${formattedAnswer}
       </div>
       <details class="exp-details">
-        <summary class="exp-summary">Giải thích chi tiết từ mô hình</summary>
-        <div class="exp-details-body">${thoughtText}</div>
+        <summary class="exp-summary">Giải thích chi tiết & Mốc chuẩn</summary>
+        <div class="exp-details-body">
+          <div class="exp-bench-row">
+            Mốc thực nghiệm Qwen offline: SLAKE <strong>${slake}</strong> · CharXiv <strong>${charxiv}</strong>
+          </div>
+          <div>${thoughtText}</div>
+        </div>
       </details>
     </div>
   `;

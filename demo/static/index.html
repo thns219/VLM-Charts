@@ -13,53 +13,38 @@
 
   <!-- Header Bar -->
   <header class="gemini-header">
-    <div class="header-brand">
+    <div class="header-left">
       <span class="brand-title">Hỏi Đáp Thị Giác VLM</span>
-      <span class="brand-badge">Dual-Engine</span>
-    </div>
-
-    <!-- Engine Switcher (Cloud API vs Local Qwen 7B) -->
-    <div class="engine-switch" id="engineSwitch">
-      <button type="button" class="btn-engine active" data-engine="cloud" id="btnEngineCloud" title="Sử dụng Gemini API (Tốc độ cao, không tốn VRAM)">
-        <span class="engine-indicator"></span>
-        <span class="engine-label">Cloud VLM</span>
-        <span class="engine-sub">API</span>
-      </button>
-      <button type="button" class="btn-engine" data-engine="local_qwen" id="btnEngineLocal" title="Chạy mô hình Qwen2.5-VL-7B 4-bit + LoRA trực tiếp trên GPU máy">
-        <span class="engine-indicator"></span>
-        <span class="engine-label">Local Qwen 7B</span>
-        <span class="engine-sub">GPU máy trạm</span>
-      </button>
-    </div>
-
-    <!-- GPU Hardware Telemetry Chip -->
-    <div class="hw-chip" id="hwChip" title="Thông số phần cứng GPU và tính sẵn sàng cho Qwen 7B">
-      <span class="hw-dot dot-checking" id="hwDot"></span>
-      <span class="hw-text" id="hwText">Đang quét GPU...</span>
+      <div class="engine-switch" id="engineSwitch">
+        <button type="button" class="btn-engine active" data-engine="cloud" id="btnEngineCloud" title="Chạy qua Cloud Gemini API (nhanh, nhẹ, không tốn VRAM)">Cloud VLM</button>
+        <button type="button" class="btn-engine" data-engine="local_qwen" id="btnEngineLocal" title="Chạy mô hình Qwen2.5-VL-7B trực tiếp trên GPU máy">Local Qwen</button>
+      </div>
     </div>
 
     <!-- Mode Selector Navigation -->
     <div class="mode-nav" id="modeNav">
-      <div class="mode-pill active" data-mode="adaptive" title="Chế độ Tự Thích Ứng (Mốc chuẩn Qwen offline: SLAKE 52.59% / CharXiv 39.60%)">
-        <span class="pill-name">Adaptive</span>
-        <span class="pill-tag-rec">Tự thích ứng</span>
-        <span class="pill-acc">52.59% / 39.60%</span>
-      </div>
-      <div class="mode-pill" data-mode="no_cot" title="Chế độ Trực Tiếp (Mốc chuẩn Qwen offline: SLAKE 50.24% / CharXiv 38.80%)">
-        <span class="pill-name">No-CoT</span>
-        <span class="pill-tag">Trực tiếp</span>
-        <span class="pill-acc">50.24% / 38.80%</span>
-      </div>
-      <div class="mode-pill" data-mode="cot" title="Chế độ Từng Bước (Mốc chuẩn Qwen offline: SLAKE 45.90% / CharXiv 36.20%)">
-        <span class="pill-name">Standard CoT</span>
-        <span class="pill-tag">Từng bước</span>
-        <span class="pill-acc">45.90% / 36.20%</span>
-      </div>
+      <button type="button" class="mode-pill active" data-mode="adaptive" title="Adaptive: Tự thích ứng theo dạng câu hỏi (SLAKE 52.59% · CharXiv 39.60%)">
+        Tự thích ứng
+      </button>
+      <button type="button" class="mode-pill" data-mode="no_cot" title="No-CoT: Trả lời trực tiếp ngắn gọn (SLAKE 50.24% · CharXiv 38.80%)">
+        Trực tiếp
+      </button>
+      <button type="button" class="mode-pill" data-mode="cot" title="Standard CoT: Suy luận từng bước (SLAKE 45.90% · CharXiv 36.20%)">
+        Từng bước
+      </button>
     </div>
 
-    <button type="button" class="btn-new-chat" id="btnNewChat">
-      Cuộc trò chuyện mới
-    </button>
+    <div class="header-right">
+      <!-- GPU Hardware Telemetry Chip -->
+      <button type="button" class="hw-chip" id="hwChip" title="Xem thông số GPU và trạng thái sẵn sàng cho Qwen 7B">
+        <span class="hw-dot dot-checking" id="hwDot"></span>
+        <span class="hw-text" id="hwText">GPU</span>
+      </button>
+
+      <button type="button" class="btn-new-chat" id="btnNewChat">
+        Đoạn chat mới
+      </button>
+    </div>
   </header>
 
   <!-- Main Chat Conversation View -->
