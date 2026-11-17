@@ -665,19 +665,30 @@
       }
     },
     "charxiv_error_cascade": {
-      "competence_distribution": {
+      "competence_distribution_direct_vs_cot": {
         "both_correct_pct": 23.4,
         "direct_only_pct": 15.4,
         "cot_only_pct": 12.8,
-        "both_wrong_pct": 48.4
+        "both_wrong_pct": 48.4,
+        "oracle_direct_cot_ceiling": 51.6
+      },
+      "competence_distribution_direct_vs_adaptive_lora": {
+        "both_correct_pct": 27.0,
+        "direct_only_pct": 11.8,
+        "adaptive_only_pct": 10.4,
+        "both_wrong_pct": 50.8,
+        "oracle_direct_lora_ceiling": 49.2
       },
       "frontiers": {
         "direct_acc": 38.8,
         "cot_acc": 36.2,
-        "routed_acc": 39.6,
-        "oracle_ceiling": 49.2,
-        "routing_regret_pct": 9.6,
-        "lost_samples_count": 48
+        "adaptive_lora_acc": 37.4,
+        "heuristic_routed_acc": 39.6,
+        "oracle_direct_lora_ceiling": 49.2,
+        "oracle_direct_cot_ceiling": 51.6,
+        "heuristic_rule_gap_pct": 9.6,
+        "gap_samples_count": 48,
+        "note": "The 9.6% gap is the limitation of the static Number/Text heuristic rule when tested against Oracle Direct+LoRA"
       }
     }
   }

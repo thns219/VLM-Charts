@@ -54,21 +54,28 @@
           40.4
         ]
       },
+      "adaptive_lora_cot": {
+        "mean": 37.4,
+        "ci_95": [
+          33.2,
+          41.6
+        ]
+      },
       "routed": {
         "mean": 39.6,
         "ci_95": [
-          35.4,
-          43.8
+          35.2,
+          43.6
         ]
       }
     }
   },
   "charxiv_multimodal_ablation": {
-    "split_support": {
+    "support": {
       "train": 300,
       "val": 100,
       "test": 100,
-      "test_class_distribution": {
+      "test_distribution": {
         "Direct": 52,
         "CoT": 48
       }
@@ -200,49 +207,18 @@
       }
     }
   },
-  "slake_demystified": {
-    "regex_baseline": {
-      "accuracy": 94.82,
-      "macro_f1": 94.42,
-      "confusion_matrix": [
-        [
-          361,
-          55
-        ],
-        [
-          0,
-          645
-        ]
-      ],
-      "classification_report": {
-        "CLOSED": {
-          "precision": 1.0,
-          "recall": 0.8677884615384616,
-          "f1-score": 0.9292149292149292,
-          "support": 416.0
-        },
-        "OPEN": {
-          "precision": 0.9214285714285714,
-          "recall": 1.0,
-          "f1-score": 0.9591078066914498,
-          "support": 645.0
-        },
-        "accuracy": 0.9481621112158342,
-        "macro avg": {
-          "precision": 0.9607142857142856,
-          "recall": 0.9338942307692308,
-          "f1-score": 0.9441613679531895,
-          "support": 1061.0
-        },
-        "weighted avg": {
-          "precision": 0.9522350881917329,
-          "recall": 0.9481621112158342,
-          "f1-score": 0.9473873193868009,
-          "support": 1061.0
-        }
+  "slake_factual_evaluation": {
+    "task_1_2class_question_type": {
+      "regex_baseline": {
+        "accuracy": 94.82,
+        "macro_f1": 94.42
+      },
+      "ml_classifier": {
+        "test_accuracy": 99.53,
+        "test_macro_f1": 99.51
       }
     },
-    "ml_router": {
+    "task_2_4class_adaptive_route": {
       "support": {
         "train": 636,
         "val": 212,
@@ -318,48 +294,45 @@
       }
     },
     "overthinking_analysis": {
-      "closed_questions": {
+      "closed": {
         "n": 416,
-        "no_cot_acc": 69.47,
-        "cot_acc": 61.78,
-        "adaptive_acc": 71.15,
-        "cot_penalty_drop": -7.69
+        "no_cot": 69.47,
+        "cot": 61.78,
+        "adaptive": 71.15,
+        "cot_drop": -7.69
       },
-      "open_questions": {
+      "open": {
         "n": 645,
-        "no_cot_acc": 37.83,
-        "cot_acc": 35.66,
-        "adaptive_acc": 40.62,
-        "adaptive_gain": 2.79
+        "no_cot": 37.83,
+        "cot": 35.66,
+        "adaptive": 40.62,
+        "gain": 2.79
       }
     }
   },
-  "charxiv_error_cascade": {
-    "competence_distribution": {
-      "both_correct": {
-        "count": 117,
-        "percent": 23.4
-      },
-      "direct_only_correct": {
-        "count": 77,
-        "percent": 15.4
-      },
-      "cot_only_correct": {
-        "count": 64,
-        "percent": 12.8
-      },
-      "both_wrong": {
-        "count": 242,
-        "percent": 48.4
-      }
+  "charxiv_factual_breakdown": {
+    "oracle_direct_vs_adaptive_lora": {
+      "both_correct": 135,
+      "direct_only": 59,
+      "adaptive_only": 52,
+      "neither": 254,
+      "total_oracle": 246,
+      "oracle_accuracy": 49.2
+    },
+    "oracle_direct_vs_standard_cot": {
+      "both_correct": 117,
+      "direct_only": 77,
+      "cot_only": 64,
+      "neither": 242,
+      "total_oracle": 258,
+      "oracle_accuracy": 51.6
     },
     "frontiers": {
       "direct_accuracy": 38.8,
-      "cot_accuracy": 36.2,
-      "routed_accuracy": 39.6,
-      "oracle_upper_bound": 49.2,
-      "routing_regret": 9.6,
-      "lost_samples_count": 48
+      "heuristic_routed_accuracy": 39.6,
+      "oracle_direct_lora_ceiling": 49.2,
+      "heuristic_gap": 9.6,
+      "gap_samples_count": 48
     }
   }
 }
