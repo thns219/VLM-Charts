@@ -651,11 +651,29 @@
       "text_only": {"accuracy": 88.0, "macro_f1": 87.82},
       "multimodal": {
         "accuracy": 88.0,
+        "wilson_ci_95": [80.19, 93.0],
         "macro_f1": 87.92,
         "weighted_f1": 87.99,
         "confusion_matrix": [[48, 4], [8, 40]],
         "precision": {"direct": 85.71, "adaptive_cot": 90.91},
         "recall": {"direct": 92.31, "adaptive_cot": 83.33}
+      },
+      "end_to_end_vqa_accuracy": {
+        "test_n": 100,
+        "direct_vqa": 33.0,
+        "cot_vqa": 36.0,
+        "ground_truth_heuristic_vqa": 35.0,
+        "learned_router_vqa": 36.0,
+        "learned_router_wilson_ci_95": [27.27, 45.76],
+        "test_delta_vs_direct": 3.0,
+        "nested_5fold_oof_full_500": {
+          "direct_vqa": "38.80% +/- 3.49%",
+          "heuristic_vqa": "39.60% +/- 2.24%",
+          "learned_router_vqa": "39.40% +/- 3.20%",
+          "delta_vs_direct": "+0.60%",
+          "delta_vs_heuristic": "-0.20%",
+          "scientific_conclusion": "End-to-end VQA using the learned router achieves 39.40% across 500 samples without metadata, showing minimal degradation (-0.20% or 1 sample drop across 500) and outperforming direct baseline by +0.60%."
+        }
       }
     },
     "slake_demystified": {

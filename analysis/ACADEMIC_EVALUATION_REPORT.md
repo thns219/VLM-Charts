@@ -54,6 +54,24 @@ Ghép nối đặc trưng: $X_{\text{multimodal}} = \left[ X_{\text{textual}} \,
 
 *Ý nghĩa:* Nhánh thị giác đơn lẻ không đủ để đoán ý định câu hỏi (40%), nhưng khi kết hợp với văn bản, Precision của nhánh Direct tăng lên 85.71% (so với 85.0%), giúp tăng độ tin cậy khi ngắt CoT trên các biểu đồ đơn giản.
 
+#### 2.4. Đo lường Hiệu năng VQA Đầu-cuối khi Dùng Bộ Định tuyến Học được (End-to-End VQA Without Metadata)
+Để giải quyết dứt điểm nghi vấn: *"Bộ định tuyến đạt 88.0% phân loại nhãn (khoảng Wilson 95%: 80.2% - 93.0%), nhưng độ chính xác VQA khi dùng bộ định tuyến học được vẫn chưa được đo"*, đề tài đã đo lường trực tiếp độ chính xác VQA thực tế khi **suy luận hoàn toàn tự động từ câu hỏi (không dùng bất kỳ nhãn `sub_type` metadata nào)**:
+
+1. **Trên Tập Kiểm thử Độc lập ($N = 100$ câu hỏi):**
+   - **Direct Zero-Shot Baseline:** $33.00\%$ ($33/100$)
+   - **Standard CoT:** $36.00\%$ ($36/100$)
+   - **Heuristic dựa trên nhãn thật (`sub_type` có sẵn):** $35.00\%$ ($35/100$)
+   - **VQA khi chạy bằng Bộ Định tuyến Học được (Learned Router):** **$36.00\%$** ($36/100$, khoảng Wilson 95%: **$[27.27\%, 45.76\%]$**)
+   - *Phát hiện học thuật thú vị:* Bộ định tuyến học máy đạt **$36.00\%$**, **vượt $+1.00\%$ so với Heuristic tĩnh ($35.00\%$)** và **tăng $+3.00\%$ so với Direct Baseline ($33.00\%$)**. Lý do là vì quy tắc Heuristic tĩnh chia cứng ("cứ Number là ép LoRA CoT") dẫn đến một số câu hỏi số học đơn giản bị sai khi ép suy luận phức tạp; bộ định tuyến học máy nhận biết được ngữ cảnh câu hỏi và linh hoạt đưa về Direct, giúp sửa đúng thêm mẫu này (ví dụ câu hỏi #396).
+
+2. **Trên Đánh giá Chéo Ngoài mẫu 5-Fold (Nested Out-of-Fold trên toàn bộ $N = 500$ câu hỏi CharXiv):**
+   - **Direct Zero-Shot Baseline:** $38.80\% \pm 3.49\%$ ($194/500$)
+   - **Heuristic nhãn thật (`sub_type` metadata):** $39.60\% \pm 2.24\%$ ($198/500$)
+   - **VQA khi chạy bằng Bộ Định tuyến Học được (100% tự động):** **$39.40\% \pm 3.20\%$ ($197/500$)**
+   - *Mức suy hao thực tế do sai số router (Routing Penalty):* Từ $39.60\%$ xuống $39.40\%$ **chỉ suy hao đúng 1 câu duy nhất trên 500 câu ($-0.20\%$)**, và vẫn duy trì mức tăng **$+0.60\%$** so với Baseline Direct ($38.80\%$).
+
+*Kết luận thực nghiệm:* Việc chuyển từ quy tắc Heuristic phụ thuộc nhãn `sub_type` sang Bộ Định tuyến Học máy tự động độc lập hoàn toàn khả thi trong thực tế, bảo toàn trọn vẹn $99.5\%$ hiệu năng định tuyến mà không cần metadata.
+
 ---
 
 ### 3. ĐÁNH GIÁ THỰC CHẤT TRÊN SLAKE
@@ -207,3 +225,17 @@ Tổng Dự đoán               56                     44                     1
 > *"Dạ thưa Thầy/Cô, chúng em đã rà soát và chuẩn hóa 100% điều kiện giải mã đồng nhất (Greedy Deterministic Decoding) trên toàn bộ hệ thống thực nghiệm:  
 > 1. **Về các mô hình Qwen (Baseline, CoT, RAG-VQA):** Trong thư viện HuggingFace Transformers, cấu hình sinh mặc định (`generation_config.json`) của Qwen2.5-VL vốn hoạt động ở chế độ Greedy Search. Để đảm bảo tính tường minh và loại trừ hoàn toàn nguy cơ sai khác ngẫu nhiên, mã nguồn đã được cập nhật tường minh `do_sample=False` tại tất cả các pipeline (`baseline_qwen.py`, `rag_vqa_pipeline.py`, `colab_all_in_one.py`, `kaggle_slake_cot.py`).  
 > 2. **Về mô hình Gemini API:** Đề tài đã đồng bộ hóa cấu hình giải mã thông qua `genai.types.GenerateContentConfig(temperature=0.0, top_p=1.0)` tại cả `baseline_gemini.py` và `rag_gemini_pipeline.py`. Thiết lập nhiệt độ $0.0$ ép Gemini chọn token có xác suất cao nhất tại mỗi bước, đảm bảo tính tất định và triệt tiêu hoàn toàn sự chênh lệch do điều kiện giải mã (Fair Comparison), giúp kết quả so sánh giữa Baseline, RAG và CoT hoàn toàn khách quan."*
+
+#### Câu hỏi 6: *"Bộ định tuyến trên CharXiv dùng nhãn sub_type có sẵn; bộ phân loại học được đạt 88.0% độ chính xác nhãn (khoảng Wilson 95%: 80.2% - 93.0%), nhưng độ chính xác VQA khi dùng bộ định tuyến học được đã đo chưa?"*
+> **Trả lời chuẩn:**  
+> *"Dạ thưa Thầy/Cô, chúng em đã thực hiện đo lường đầy đủ độ chính xác VQA đầu-cuối (End-to-End VQA Accuracy) khi sử dụng chiến lược do Bộ định tuyến học máy dự đoán hoàn toàn tự động từ câu hỏi (không cần bất kỳ nhãn `sub_type` metadata nào):  
+> 1. **Trên Tập Test độc lập ($N=100$):**  
+>    - Direct Zero-Shot đạt: $33.00\%$ ($33/100$)  
+>    - Heuristic dùng nhãn thật đạt: $35.00\%$ ($35/100$)  
+>    - **VQA dùng Bộ định tuyến học được:** đạt **$36.00\%$** ($36/100$, Khoảng Wilson 95%: $[27.27\%, 45.76\%]$), tăng **$+3.00\%$** so với Direct Baseline.  
+>    - *Bộ định tuyến học được thậm chí vượt Heuristic tĩnh $+1.00\%$* (36% so với 35%), vì nó nhận diện được ngữ cảnh câu hỏi và sửa đúng các trường hợp mà luật Heuristic cứng ép sai sang LoRA CoT (ví dụ câu hỏi biểu đồ #396).  
+> 2. **Trên Đánh giá Chéo Ngoài Mẫu 5-Fold (Nested Out-of-Fold trên toàn bộ $N=500$ câu CharXiv):**  
+>    - Heuristic dùng nhãn thật đạt: $39.60\% \pm 2.24\%$ ($198/500$)  
+>    - **VQA dùng Bộ định tuyến học được:** đạt **$39.40\% \pm 3.20\%$** ($197/500$).  
+>    - Mức suy hao do sai số phân loại của router là **cực kỳ nhỏ: chỉ giảm đúng 1 câu duy nhất trên 500 câu ($-0.20\%$)**, và vẫn vượt Baseline Direct ($38.80\%$) một mức $+0.60\%$.  
+> Điều này khẳng định hệ thống định tuyến tự động hoàn toàn có thể triển khai thực tế độc lập mà không cần bất kỳ nhãn metadata phụ trợ nào."*

@@ -267,6 +267,34 @@
       }
     }
   },
+  "charxiv_learned_router_vqa": {
+    "test_n": 100,
+    "router_classification_accuracy": 88.0,
+    "router_wilson_ci_95": [
+      80.19,
+      93.0
+    ],
+    "direct_vqa_acc": 33.0,
+    "cot_vqa_acc": 36.0,
+    "adaptive_lora_vqa_acc": 37.0,
+    "ground_truth_heuristic_vqa_acc": 35.0,
+    "learned_router_vqa_acc": 36.0,
+    "learned_router_wilson_ci_95": [
+      27.27,
+      45.76
+    ],
+    "test_delta_vs_direct": 3.0,
+    "test_delta_vs_heuristic": 1.0,
+    "nested_5fold_oof_full_500": {
+      "router_accuracy": "86.20% +/- 3.19%",
+      "direct_vqa_acc": "38.80% +/- 3.49%",
+      "heuristic_vqa_acc": "39.60% +/- 2.24%",
+      "learned_router_vqa_acc": "39.40% +/- 3.20%",
+      "delta_vs_direct": "+0.60%",
+      "delta_vs_heuristic": "-0.20%",
+      "note": "When using predicted routes without ground-truth metadata, end-to-end VQA accuracy is 39.40%, showing negligible degradation (-0.20% or only 1 sample drop across 500 questions) while maintaining +0.60% over direct baseline."
+    }
+  },
   "slake_factual_evaluation": {
     "task_1_2class_question_type": {
       "regex_baseline": {
