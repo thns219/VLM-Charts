@@ -141,13 +141,13 @@
       }
     },
     "text_only": {
-      "accuracy": 87.0,
-      "macro_f1": 86.84,
-      "weighted_f1": 86.9,
+      "accuracy": 86.0,
+      "macro_f1": 85.86,
+      "weighted_f1": 85.92,
       "confusion_matrix": [
         [
-          49,
-          3
+          48,
+          4
         ],
         [
           10,
@@ -156,28 +156,28 @@
       ],
       "classification_report": {
         "Direct_Zero_Shot": {
-          "precision": 0.8305084745762712,
-          "recall": 0.9423076923076923,
-          "f1-score": 0.8828828828828829,
+          "precision": 0.8275862068965517,
+          "recall": 0.9230769230769231,
+          "f1-score": 0.8727272727272727,
           "support": 52.0
         },
         "Adaptive_LoRA_CoT": {
-          "precision": 0.926829268292683,
+          "precision": 0.9047619047619048,
           "recall": 0.7916666666666666,
-          "f1-score": 0.8539325842696629,
+          "f1-score": 0.8444444444444444,
           "support": 48.0
         },
-        "accuracy": 0.87,
+        "accuracy": 0.86,
         "macro avg": {
-          "precision": 0.878668871434477,
-          "recall": 0.8669871794871795,
-          "f1-score": 0.8684077335762729,
+          "precision": 0.8661740558292282,
+          "recall": 0.8573717948717949,
+          "f1-score": 0.8585858585858586,
           "support": 100.0
         },
         "weighted avg": {
-          "precision": 0.8767424555601488,
-          "recall": 0.87,
-          "f1-score": 0.8689867395485373,
+          "precision": 0.8646305418719211,
+          "recall": 0.86,
+          "f1-score": 0.8591515151515151,
           "support": 100.0
         }
       }
@@ -225,43 +225,43 @@
       }
     },
     "multimodal": {
-      "accuracy": 88.0,
-      "macro_f1": 87.92,
-      "weighted_f1": 87.96,
+      "accuracy": 86.0,
+      "macro_f1": 85.91,
+      "weighted_f1": 85.95,
       "confusion_matrix": [
         [
-          48,
-          4
+          47,
+          5
         ],
         [
-          8,
-          40
+          9,
+          39
         ]
       ],
       "classification_report": {
         "Direct_Zero_Shot": {
-          "precision": 0.8571428571428571,
-          "recall": 0.9230769230769231,
-          "f1-score": 0.8888888888888888,
+          "precision": 0.8392857142857143,
+          "recall": 0.9038461538461539,
+          "f1-score": 0.8703703703703703,
           "support": 52.0
         },
         "Adaptive_LoRA_CoT": {
-          "precision": 0.9090909090909091,
-          "recall": 0.8333333333333334,
-          "f1-score": 0.8695652173913043,
+          "precision": 0.8863636363636364,
+          "recall": 0.8125,
+          "f1-score": 0.8478260869565217,
           "support": 48.0
         },
-        "accuracy": 0.88,
+        "accuracy": 0.86,
         "macro avg": {
-          "precision": 0.8831168831168831,
-          "recall": 0.8782051282051282,
-          "f1-score": 0.8792270531400965,
+          "precision": 0.8628246753246753,
+          "recall": 0.8581730769230769,
+          "f1-score": 0.8590982286634461,
           "support": 100.0
         },
         "weighted avg": {
-          "precision": 0.8820779220779221,
-          "recall": 0.88,
-          "f1-score": 0.8796135265700482,
+          "precision": 0.861883116883117,
+          "recall": 0.86,
+          "f1-score": 0.859549114331723,
           "support": 100.0
         }
       }
@@ -269,10 +269,10 @@
   },
   "charxiv_learned_router_vqa": {
     "test_n": 100,
-    "router_classification_accuracy": 87.0,
+    "router_classification_accuracy": 86.0,
     "router_wilson_ci_95": [
-      79.02,
-      92.24
+      77.86,
+      91.47
     ],
     "direct_vqa_acc": 33.0,
     "cot_vqa_acc": 36.0,
@@ -286,10 +286,10 @@
     "test_delta_vs_direct": 2.0,
     "test_delta_vs_heuristic": 0.0,
     "nested_5fold_oof_full_500": {
-      "router_accuracy": "86.20% +/- 3.19%",
+      "router_accuracy": "87.00% +/- 3.29%",
       "direct_vqa_acc": "38.80% +/- 3.49%",
       "heuristic_vqa_acc": "39.60% +/- 2.24%",
-      "learned_router_vqa_acc": "39.40% +/- 3.20%",
+      "learned_router_vqa_acc": "39.40% +/- 3.07%",
       "delta_vs_direct": "+0.60%",
       "delta_vs_heuristic": "-0.20%",
       "note": "When using predicted routes without ground-truth metadata, end-to-end VQA accuracy is 39.40%, showing negligible degradation (-0.20% or only 1 sample drop across 500 questions) while maintaining +0.60% over direct baseline."

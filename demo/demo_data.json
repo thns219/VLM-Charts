@@ -645,10 +645,10 @@
       }
     },
     "charxiv_multimodal_ablation": {
-      "method": "Text (TF-IDF 2500) + Visual Complexity (Edge density, Laplacian variance, Entropy), 60/20/20 split",
+      "method": "Text (TF-IDF 750) + Visual Complexity (Edge density, Laplacian variance, Entropy), 60/20/20 split",
       "support": {"train": 300, "val": 100, "test": 100},
       "vision_only": {"accuracy": 40.0, "macro_f1": 39.78},
-      "text_only": {"accuracy": 87.0, "macro_f1": 86.84},
+      "text_only": {"accuracy": 86.0, "macro_f1": 85.86},
       "multimodal": {
         "accuracy": 88.0,
         "wilson_ci_95": [80.19, 93.0],

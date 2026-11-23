@@ -297,7 +297,7 @@ cx_train_idx, cx_tmp_idx = train_test_split(cx_idx, test_size=0.40, random_state
 cx_val_idx, cx_test_idx  = train_test_split(cx_tmp_idx, test_size=0.50, random_state=42, stratify=cx_y_bin[cx_tmp_idx])
 
 # Strictly leak-free: fit vectorizer & scaler only on training partition (N=300)
-cx_tfidf = TfidfVectorizer(max_features=2500, ngram_range=(1, 2))
+cx_tfidf = TfidfVectorizer(max_features=750, ngram_range=(1, 2))
 cx_text_tr = cx_tfidf.fit_transform(charxiv_df["question"].iloc[cx_train_idx].fillna("")).toarray()
 cx_text_te = cx_tfidf.transform(charxiv_df["question"].iloc[cx_test_idx].fillna("")).toarray()
 cx_text_va = cx_tfidf.transform(charxiv_df["question"].iloc[cx_val_idx].fillna("")).toarray()
@@ -388,7 +388,7 @@ oof_kf_cx = KFold(n_splits=5, shuffle=True, random_state=42)
 oof_cx_router_acc, oof_cx_learned_vqa, oof_cx_heur_vqa, oof_cx_dir_vqa = [], [], [], []
 
 for tr_k, te_k in oof_kf_cx.split(charxiv_df):
-    vec_k = TfidfVectorizer(max_features=2500, ngram_range=(1, 2))
+    vec_k = TfidfVectorizer(max_features=750, ngram_range=(1, 2))
     X_tr_k = vec_k.fit_transform(charxiv_df["question"].iloc[tr_k].fillna(""))
     X_te_k = vec_k.transform(charxiv_df["question"].iloc[te_k].fillna(""))
     

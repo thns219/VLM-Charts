@@ -50,13 +50,13 @@ Ghép nối đặc trưng: $X_{\text{multimodal}} = \left[ X_{\text{textual}} \,
 | Cấu hình Router | Đặc trưng đầu vào | Accuracy | Macro F1 | Weighted F1 | Precision (Direct / CoT) | Recall (Direct / CoT) |
 |---|---|---|---|---|---|---|
 | **Vision-Only** | 4 chỉ số phức tạp hình học | 40.00% | 39.78% | 39.93% | 0.43 / 0.37 | 0.44 / 0.35 |
-| **Text-Only** | 2.500 TF-IDF N-grams (Leak-Free) | 87.00% | 86.84% | 86.90% | 0.83 / 0.95 | 0.96 / 0.79 |
-| **Multimodal (Đề xuất)** | **Text + Visual Complexity** | **88.00%** | **87.92%** | **87.96%** | **0.86 / 0.91** | **0.92 / 0.83** |
+| **Text-Only** | 750 TF-IDF N-grams (Leak-Free) | 86.00% | 85.86% | 85.91% | 0.83 / 0.95 | 0.96 / 0.79 |
+| **Multimodal (Đề xuất)** | **Text + Visual Complexity** | **86.00%** | **85.91%** | **85.96%** | **0.84 / 0.91** | **0.90 / 0.81** |
 
 *Ý nghĩa:* Nhánh thị giác đơn lẻ không đủ để đoán ý định câu hỏi (40%), nhưng khi kết hợp với văn bản, Precision của nhánh Direct tăng lên 85.71% (so với 83.05%), giúp tăng độ tin cậy khi ngắt CoT trên các biểu đồ đơn giản.
 
 #### 2.4. Đo lường Hiệu năng VQA Đầu-cuối khi Dùng Bộ Định tuyến Học được (End-to-End VQA Without Metadata)
-Để giải quyết dứt điểm nghi vấn: *"Bộ định tuyến đạt 87.0% phân loại nhãn (khoảng Wilson 95%: 79.02% - 92.24%), nhưng độ chính xác VQA khi dùng bộ định tuyến học được vẫn chưa được đo"*, đề tài đã đo lường trực tiếp độ chính xác VQA thực tế khi **suy luận hoàn toàn tự động từ câu hỏi (không dùng bất kỳ nhãn `sub_type` metadata nào)**:
+Để giải quyết dứt điểm nghi vấn: *"Bộ định tuyến đạt 86.0% phân loại nhãn (khoảng Wilson 95%: 77.86% - 91.47%), nhưng độ chính xác VQA khi dùng bộ định tuyến học được vẫn chưa được đo"*, đề tài đã đo lường trực tiếp độ chính xác VQA thực tế khi **suy luận hoàn toàn tự động từ câu hỏi (không dùng bất kỳ nhãn `sub_type` metadata nào)**:
 
 1. **Trên Phân tập Kiểm thử Giữ lại (Holdout Test Split $N = 100$ câu hỏi CharXiv):**
    - **Direct Zero-Shot Baseline:** $33.00\%$ ($33/100$)
@@ -232,11 +232,11 @@ Tổng Dự đoán               56                     44                     1
 > 1. **Về các mô hình Qwen (Baseline, CoT, RAG-VQA):** Trong thư viện HuggingFace Transformers, cấu hình sinh mặc định (`generation_config.json`) của Qwen2.5-VL vốn hoạt động ở chế độ Greedy Search. Để đảm bảo tính tường minh và loại trừ hoàn toàn nguy cơ sai khác ngẫu nhiên, mã nguồn đã được cập nhật tường minh `do_sample=False` tại tất cả các pipeline (`baseline_qwen.py`, `rag_vqa_pipeline.py`, `colab_all_in_one.py`, `kaggle_slake_cot.py`).  
 > 2. **Về mô hình Gemini API:** Đề tài đã đồng bộ hóa cấu hình giải mã thông qua `genai.types.GenerateContentConfig(temperature=0.0, top_p=1.0)` tại cả `baseline_gemini.py` và `rag_gemini_pipeline.py`. Thiết lập nhiệt độ $0.0$ ép Gemini chọn token có xác suất cao nhất tại mỗi bước, đảm bảo tính tất định và triệt tiêu hoàn toàn sự chênh lệch do điều kiện giải mã (Fair Comparison), giúp kết quả so sánh giữa Baseline, RAG và CoT hoàn toàn khách quan."*
 
-#### Câu hỏi 6: *"Bộ định tuyến trên CharXiv dùng nhãn sub_type có sẵn; bộ phân loại học được đạt 87.0% độ chính xác nhãn (khoảng Wilson 95%: 79.0% - 92.2%), nhưng độ chính xác VQA khi dùng bộ định tuyến học được đã đo chưa?"*
+#### Câu hỏi 6: *"Bộ định tuyến trên CharXiv dùng nhãn sub_type có sẵn; bộ phân loại học được đạt 86.0% độ chính xác nhãn (khoảng Wilson 95%: 77.86% - 91.47%), nhưng độ chính xác VQA khi dùng bộ định tuyến học được đã đo chưa?"*
 > **Trả lời chuẩn:**  
 > *"Dạ thưa Thầy/Cô, chúng em đã thực hiện đo lường đầy đủ độ chính xác VQA đầu-cuối (End-to-End VQA Accuracy) khi sử dụng chiến lược do Bộ định tuyến học máy dự đoán hoàn toàn tự động từ câu hỏi (không cần bất kỳ nhãn `sub_type` metadata nào và được huấn luyện hoàn toàn không rò rỉ dữ liệu - leak-free):  
 > 1. **Trên Phân tập Kiểm thử Giữ lại ($N=100$):**  
->    - Bộ phân loại văn bản TF-IDF đạt độ chính xác gán nhãn: **$87.00\%$** (Wilson 95% CI: $[79.02\%, 92.24\%]$).  
+>    - Bộ phân loại văn bản TF-IDF đạt độ chính xác gán nhãn: **$86.00\%$** (Wilson 95% CI: $[77.86\%, 91.47\%]$).  
 >    - Direct Zero-Shot đạt: $33.00\%$ ($33/100$)  
 >    - Heuristic dùng nhãn thật đạt: $35.00\%$ ($35/100$)  
 >    - **VQA dùng Bộ định tuyến học được:** đạt **$35.00\%$** ($35/100$, Khoảng Wilson 95%: $[26.36\%, 44.75\%]$), tăng **$+2.00\%$** so với Direct Baseline và tái lập tương đương $100\%$ kết quả của Heuristic nhãn thật.  

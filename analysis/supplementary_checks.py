@@ -233,7 +233,7 @@ def main():
     va_c, te_c  = train_test_split(tmp_c, test_size=0.50, random_state=42, stratify=y_strat_c[tmp_c])
 
     # Fit TF-IDF strictly on train split only
-    vec_c = TfidfVectorizer(max_features=2500, ngram_range=(1, 2))
+    vec_c = TfidfVectorizer(max_features=750, ngram_range=(1, 2))
     X_tr_c = vec_c.fit_transform(cx_df["question"].iloc[tr_c].fillna("")).toarray()
     X_te_c = vec_c.transform(cx_df["question"].iloc[te_c].fillna("")).toarray()
 
@@ -263,7 +263,7 @@ def main():
     kf_c = KFold(n_splits=5, shuffle=True, random_state=42)
     oof_vqa = []
     for tr_k, te_k in kf_c.split(cx_df):
-        v_k = TfidfVectorizer(max_features=2500, ngram_range=(1, 2))
+        v_k = TfidfVectorizer(max_features=750, ngram_range=(1, 2))
         X_tr_k = v_k.fit_transform(cx_df["question"].iloc[tr_k].fillna(""))
         X_te_k = v_k.transform(cx_df["question"].iloc[te_k].fillna(""))
         clf_k = LogisticRegression(C=1.0, max_iter=500, random_state=42).fit(X_tr_k, y_strat_c[tr_k])
@@ -287,3 +287,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
