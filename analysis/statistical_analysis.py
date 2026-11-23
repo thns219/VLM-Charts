@@ -32,7 +32,24 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from statsmodels.stats.contingency_tables import mcnemar
+
+try:
+    from statsmodels.stats.contingency_tables import mcnemar
+except ImportError:
+    from scipy.stats import chi2
+    class McNemarResult:
+        def __init__(self, stat, pval):
+            self.statistic = stat
+            self.pvalue = pval
+    def mcnemar(table, exact=False, correction=True):
+        b = table[0][1]
+        c = table[1][0]
+        if correction:
+            stat = (abs(b - c) - 1.0) ** 2 / (b + c) if (b + c) > 0 else 0.0
+        else:
+            stat = float((b - c) ** 2) / (b + c) if (b + c) > 0 else 0.0
+        pval = float(chi2.sf(stat, df=1))
+        return McNemarResult(stat, pval)
 
 warnings.filterwarnings("ignore")
 
@@ -115,7 +132,7 @@ print("=" * 80)
 
 rng = np.random.default_rng(42)
 
-def calc_bootstrap_ci(series, n_boot=1000):
+def calc_bootstrap_ci(series, n_boot=10000):
     arr = np.asarray(series, dtype=float)
     means = [arr[rng.integers(0, len(arr), len(arr))].mean() for _ in range(n_boot)]
     lo = float(np.percentile(means, 2.5)) * 100
@@ -123,7 +140,7 @@ def calc_bootstrap_ci(series, n_boot=1000):
     mean_val = float(arr.mean()) * 100
     return round(mean_val, 2), round(lo, 2), round(hi, 2)
 
-def calc_paired_difference_ci(series_a, series_b, n_boot=2000):
+def calc_paired_difference_ci(series_a, series_b, n_boot=10000):
     """Tính 95% CI của độ chênh lệch ghép cặp Delta = A - B (Within-subject design)."""
     arr_a = np.asarray(series_a, dtype=float)
     arr_b = np.asarray(series_b, dtype=float)

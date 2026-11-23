@@ -616,19 +616,19 @@
       "interpretation": "Routing does not significantly change per-sample accuracy (p=0.671) — gain is structural and bottlenecked by routing errors"
     },
     "bootstrap_ci_95": {
-      "method": "Percentile bootstrap, 1000 resamples, seed=42",
+      "method": "Percentile bootstrap, 10,000 resamples, seed=42",
       "slake": {
-        "no_cot": [47.5, 53.25],
+        "no_cot": [47.22, 53.25],
         "cot": [42.88, 48.92],
-        "adaptive": [49.67, 55.52],
-        "paired_delta_ci": [0.75, 3.96]
+        "adaptive": [49.58, 55.51],
+        "paired_delta_ci": [0.85, 3.86]
       },
       "charxiv": {
-        "direct": [34.6, 43.2],
-        "cot": [32.0, 40.6],
-        "routed": [35.6, 44.2],
-        "paired_delta_ci": [-2.0, 3.6],
-        "oracle_bound": [44.8, 53.6]
+        "direct": [34.60, 43.00],
+        "cot": [32.00, 40.40],
+        "routed": [35.40, 43.80],
+        "paired_delta_ci": [-2.00, 3.60],
+        "oracle_bound": [44.80, 53.60]
       }
     },
     "five_fold_stability": {
