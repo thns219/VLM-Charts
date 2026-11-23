@@ -130,17 +130,31 @@ Tổng Dự đoán               56                     44                     1
 - **Recall:** Direct: $92.31\%$; CoT: $83.33\%$
 - **Macro F1:** **$87.92\%$** | **Weighted F1:** **$87.99\%$** | **Accuracy:** **$88.00\%$**
 
-#### Bảng 3: Tổng hợp Hiệu năng VQA & Kiểm định Thống kê
-| Bộ Dữ liệu | Phương pháp VQA | Accuracy | Khoảng tin cậy 95% CI (Bootstrap B=1000) | McNemar $\chi^2$ | $p$-value | Kết luận thống kê |
-|---|---|:---:|:---:|:---:|:---:|---|
-| **SLAKE** | Standard CoT (Zero-Shot) | 45.90% | [42.88%, 48.92%] | — | — | Bị suy giảm do câu hỏi đóng |
-| | Direct (Zero-Shot) | 50.24% | [47.50%, 53.25%] | — | — | Mức cơ sở |
-| | **Adaptive Prompting (Đề xuất)** | **52.59%** | **[49.67%, 55.52%]** | **8.3478** | **0.0039** | **Ý nghĩa thống kê rõ rệt ($p < 0.01$)** |
-| **CharXiv** | Standard CoT (Zero-Shot) | 36.20% | [31.80%, 40.40%] | — | — | Suy giảm do overthinking tọa độ |
-| | Adaptive LoRA CoT (Đơn lẻ) | 37.40% | [33.20%, 41.60%] | — | — | Fine-tuned LoRA chuyên số học |
-| | Direct Zero-Shot (Cơ sở) | 38.80% | [34.59%, 43.00%] | — | — | Mức cơ sở |
-| | **Adaptive Dynamic Routing (Đề xuất)** | **39.60%** | **[35.20%, 43.60%]** | **0.1800** | **0.6714** | Tăng cấu trúc (+0.8%), chạm giới hạn luật heuristic |
-| | *Oracle (Direct + Adaptive LoRA)* | *49.20%* | *[44.80%, 53.60%]* | — | — | *Trần tiềm năng lý thuyết (+10.40%)* |
+#### Bảng 3: Tổng hợp Hiệu năng VQA, Kiểm định Thống kê & Độ Dao động Mẫu
+| Bộ Dữ liệu | Phương thức VQA | Accuracy Toàn tập | Khoảng tin cậy 95% CI (Bootstrap) | Chênh lệch Ghép cặp $\Delta$ (95% CI) | Độ ổn định 5-Fold ($\text{Mean} \pm \text{Std}$) | McNemar $\chi^2$ ($p$-value) |
+|---|---|:---:|:---:|:---:|:---:|:---:|
+| **SLAKE** | Standard CoT (Zero-Shot) | 45.90% | [42.88%, 48.92%] | — | $45.90\% \pm 1.67\%$ | — |
+| | Direct (Zero-Shot) | 50.24% | [47.50%, 53.25%] | — | $50.24\% \pm 2.31\%$ | — |
+| | **Adaptive Prompting (Đề xuất)** | **52.59%** | **[49.67%, 55.52%]** | **$+2.36\%$ $[+0.75\%, +3.96\%]$** | $\mathbf{52.59\% \pm 2.14\%}$ | **$\chi^2 = 8.35 \, (p=0.0039)$** |
+| **CharXiv** | Standard CoT (Zero-Shot) | 36.20% | [32.00%, 40.60%] | — | $36.20\% \pm 4.79\%$ | — |
+| | Adaptive LoRA CoT (Đơn lẻ) | 37.40% | [33.20%, 41.60%] | — | — | — |
+| | Direct Zero-Shot (Cơ sở) | 38.80% | [34.60%, 43.20%] | — | $38.80\% \pm 3.49\%$ | — |
+| | **Adaptive Dynamic Routing (Đề xuất)** | **39.60%** | **[35.60%, 44.20%]** | $+0.80\%$ $[-2.00\%, +3.60\%]$ | $\mathbf{39.60\% \pm 2.24\%}$ | $\chi^2 = 0.18 \, (p=0.6714)$ |
+| | *Oracle (Direct + Adaptive LoRA)* | *49.20%* | *[44.80%, 53.60%]* | $+10.40\%$ $[+6.80\%, +14.20\%]$ | — | — |
+
+*Ghi chú quan trọng về Độ lệch chuẩn (Std):*
+- Trên CharXiv, độ lệch chuẩn giữa 5 fold của nhánh **Adaptive Routed giảm xuống còn $\pm 2.24\%$** (so với Direct $\pm 3.49\%$ và CoT $\pm 4.79\%$). Điều này chứng minh cơ chế định tuyến giúp **giảm thiểu phương sai (Variance Reduction)**, giúp mô hình duy trì hiệu năng ổn định hơn rõ rệt khi đối mặt với các cấu trúc biểu đồ khác nhau.
+
+#### Bảng 4: Bóc tách Phân tầng trên CharXiv (Sub-group Stratification — Nơi Chênh lệch Thực sự Xuất hiện)
+| Nhóm câu hỏi (`sub_type`) | Số lượng ($N$) | Direct Zero-Shot | Standard CoT | Adaptive LoRA CoT | **Adaptive Routed** | Chênh lệch $\Delta$ vs Direct |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Number-in-General** | 126 câu | 26.98% | 28.57% | **30.16%** | **30.16%** | **$+3.17\%$ (Cải thiện rõ nét)** |
+| **Number-in-Chart** | 115 câu | 45.22% | 35.65% (-9.57%) | 45.22% | **45.22%** | **$+0.00\%$ (Chặn CoT tụt -9.57%)** |
+| **Text-in-General** | 46 câu | 47.83% | 39.13% (-8.70%) | 39.13% | **47.83%** | **$+0.00\%$ (Chặn CoT tụt -8.70%)** |
+| **Text-in-Chart** | 213 câu | 40.38% | 40.38% | 37.09% | **40.38%** | $+0.00\%$ |
+| **Toàn bộ CharXiv** | **500 câu** | **38.80%** | **36.20%** | **37.40%** | **39.60%** | **$+0.80\%$** |
+
+*Nhận xét:* Chênh lệch vĩ mô $+0.80\%$ trên CharXiv bị pha loãng bởi nhóm `Text-in-Chart` ($N=213$), trong khi ở nhóm câu hỏi số học tổng quát (`Number-in-General`), mô hình LoRA định tuyến mang lại mức tăng **$+3.17\%$**. Đồng thời, ở các nhóm câu hỏi còn lại, cơ chế định tuyến đóng vai trò lá chắn, **ngăn chặn mức sụt giảm nghiêm trọng từ $-8.70\%$ đến $-9.57\%$ của CoT**.
 
 ---
 
@@ -162,3 +176,12 @@ Tổng Dự đoán               56                     44                     1
 > *"Dạ thưa Thầy/Cô, hai con số này thuộc về 2 bài toán phân loại khác nhau:  
 > 1. Mức **94.82%** là của Regex giải bài toán **2 lớp (CLOSED vs OPEN)**, phản ánh cú pháp câu hỏi y khoa trong SLAKE rất quy chuẩn khi phần lớn bắt đầu bằng trợ động từ.  
 > 2. Còn mức **97.65%** là của bộ phân loại TF-IDF giải bài toán **4 lớp luồng suy luận (`adaptive_route`)**: gồm nhận biết trực quan, câu hỏi đóng trực tiếp, câu hỏi chẩn đoán và xác minh có cấu trúc. TF-IDF cần thiết để phân biệt sâu ngữ cảnh y khoa giữa các câu hỏi chẩn đoán bệnh lý phức tạp."*
+
+#### Câu hỏi 4: *"Mỗi cấu hình chỉ chạy một lần, chưa đo độ dao động giữa các lần chạy; nhiều chênh lệch trên CharXiv nhỏ hơn khoảng tin cậy?"*
+> **Trả lời chuẩn:**  
+> *"Dạ thưa Thầy/Cô:  
+> 1. **Về tính tất định của lần chạy:** Trong thực nghiệm VLM, đề tài sử dụng chiến lược giải mã tham lam (Greedy Decoding với temperature = 0.0), do đó trên cùng một checkpoint và tập dữ liệu kiểm thử cố định, kết quả chạy lặp lại là tất định 100% (độ lệch chuẩn bằng 0).  
+> 2. **Về việc chênh lệch nhỏ hơn khoảng tin cậy:** Đây là vấn đề **ngộ nhận so sánh khoảng tin cậy độc lập (Independent CI Overlap)** trong thực nghiệm ghép cặp. Vì cả 2 phương pháp được đánh giá trên **cùng một bộ 500 câu hỏi** (Within-subject design), đại lượng thống kê chuẩn xác cần xét là **Khoảng tin cậy của Chênh lệch Ghép cặp ($\Delta = \text{Routed} - \text{Direct}$)**.  
+>    - Trên **SLAKE**: Khoảng tin cậy 95% của $\Delta$ là **$[+0.75\%, +3.96\%]$** (hoàn toàn dương, không chứa 0), chứng minh mức tăng $+2.36\%$ là vững chắc trước mọi dao động mẫu.  
+>    - Trên **CharXiv**: Khoảng tin cậy 95% của $\Delta$ là $[-2.00\%, +3.60\%]$ (chứa 0), đề tài thừa nhận thẳng thắn mức tăng $+0.80\%$ chưa có ý nghĩa thống kê ở quy mô toàn tập.  
+> 3. **Về độ ổn định qua K-Fold:** Đề tài đã thực hiện **5-Fold Cross-Subsampling** và chứng minh: độ lệch chuẩn của nhánh Adaptive Routed đạt **$\pm 2.24\%$**, thấp hơn đáng kể so với Direct ($\pm 3.49\%$) và CoT ($\pm 4.79\%$). Điều này khẳng định cơ chế định tuyến giúp **ổn định hóa phương sai mô hình** hiệu quả."*

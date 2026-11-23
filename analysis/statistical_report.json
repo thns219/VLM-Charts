@@ -37,21 +37,28 @@
           49.67,
           55.52
         ]
+      },
+      "paired_difference_delta": {
+        "mean": 2.36,
+        "ci_95": [
+          0.75,
+          3.96
+        ]
       }
     },
     "charxiv": {
       "direct": {
         "mean": 38.8,
         "ci_95": [
-          34.59,
-          43.0
+          34.6,
+          43.2
         ]
       },
       "cot": {
         "mean": 36.2,
         "ci_95": [
-          31.8,
-          40.4
+          32.0,
+          40.6
         ]
       },
       "adaptive_lora_cot": {
@@ -64,9 +71,62 @@
       "routed": {
         "mean": 39.6,
         "ci_95": [
-          35.2,
-          43.6
+          35.6,
+          44.2
         ]
+      },
+      "paired_difference_delta": {
+        "mean": 0.8,
+        "ci_95": [
+          -2.0,
+          3.6
+        ]
+      }
+    },
+    "five_fold_stability": {
+      "slake": {
+        "no_cot": "50.24% +/- 2.31%",
+        "adaptive": "52.59% +/- 2.14%",
+        "delta": "+2.35% +/- 1.52%"
+      },
+      "charxiv": {
+        "direct": "38.80% +/- 3.49%",
+        "routed": "39.60% +/- 2.24%",
+        "delta": "+0.80% +/- 1.60%"
+      }
+    },
+    "charxiv_subgroups": {
+      "Text-in-Chart": {
+        "n": 213,
+        "direct_acc": 40.38,
+        "cot_acc": 40.38,
+        "adaptive_lora_acc": 37.09,
+        "routed_acc": 40.38,
+        "delta_vs_direct": 0.0
+      },
+      "Number-in-Chart": {
+        "n": 115,
+        "direct_acc": 45.22,
+        "cot_acc": 35.65,
+        "adaptive_lora_acc": 45.22,
+        "routed_acc": 45.22,
+        "delta_vs_direct": 0.0
+      },
+      "Number-in-General": {
+        "n": 126,
+        "direct_acc": 26.98,
+        "cot_acc": 28.57,
+        "adaptive_lora_acc": 30.16,
+        "routed_acc": 30.16,
+        "delta_vs_direct": 3.17
+      },
+      "Text-in-General": {
+        "n": 46,
+        "direct_acc": 47.83,
+        "cot_acc": 39.13,
+        "adaptive_lora_acc": 39.13,
+        "routed_acc": 47.83,
+        "delta_vs_direct": 0.0
       }
     }
   },

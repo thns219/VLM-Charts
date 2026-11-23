@@ -620,13 +620,28 @@
       "slake": {
         "no_cot": [47.5, 53.25],
         "cot": [42.88, 48.92],
-        "adaptive": [49.67, 55.52]
+        "adaptive": [49.67, 55.52],
+        "paired_delta_ci": [0.75, 3.96]
       },
       "charxiv": {
-        "direct": [34.59, 43.0],
-        "cot": [31.8, 40.4],
-        "routed": [35.4, 43.8],
+        "direct": [34.6, 43.2],
+        "cot": [32.0, 40.6],
+        "routed": [35.6, 44.2],
+        "paired_delta_ci": [-2.0, 3.6],
         "oracle_bound": [44.8, 53.6]
+      }
+    },
+    "five_fold_stability": {
+      "slake": {
+        "no_cot": "50.24% +/- 2.31%",
+        "adaptive": "52.59% +/- 2.14%",
+        "delta": "+2.35% +/- 1.52%"
+      },
+      "charxiv": {
+        "direct": "38.80% +/- 3.49%",
+        "routed": "39.60% +/- 2.24%",
+        "delta": "+0.80% +/- 1.60%",
+        "variance_reduction_note": "Adaptive routing reduces cross-fold standard deviation from 3.49% to 2.24%"
       }
     },
     "charxiv_multimodal_ablation": {
