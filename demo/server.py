@@ -48,11 +48,42 @@ from socketserver import ThreadingMixIn
 from PIL import Image, ImageOps
 
 # ==============================================================================
-# HuggingFace Inference API — Qwen2.5-VL-7B-Instruct (không cần GPU local)
+# OpenRouter & HuggingFace Inference API — Qwen2.5-VL (Cloud, không cần GPU local)
 # ==============================================================================
+OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENROUTER_MODEL = "qwen/qwen2.5-vl-72b-instruct"
+OPENROUTER_FALLBACK_MODEL = "qwen/qwen3-vl-8b-instruct"
+
 HF_API_URL = "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-VL-7B-Instruct/v1/chat/completions"
 HF_API_URL_FALLBACK = "https://router.huggingface.co/novita/v3/openai/chat/completions"
 HF_MODEL = "Qwen/Qwen2.5-VL-7B-Instruct"
+
+def get_openrouter_api_key():
+    """Đọc OPENROUTER_API_KEY động: ưu tiên env var, fallback sang openrouter_key.txt / .env."""
+    key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+    if key:
+        return key
+    candidates = [
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "openrouter_key.txt"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "openrouter_key.txt"),
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"),
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            try:
+                with open(p, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line or line.startswith("#"):
+                            continue
+                        if "OPENROUTER_API_KEY=" in line:
+                            return line.split("OPENROUTER_API_KEY=", 1)[1].strip().strip('"\'')
+                        elif line.startswith("sk-or-"):
+                            return line
+            except Exception:
+                pass
+    return ""
 
 def get_hf_token():
     """Đọc HF_TOKEN động: ưu tiên env var, fallback sang .env / hf_token.txt."""
@@ -377,13 +408,15 @@ def run_live_gemini_vqa(pil_image, question, mode="adaptive", api_key=None):
 import subprocess
 
 
-def run_hf_qwen_inference(question, image_b64, route):
-    """Gọi Qwen2.5-VL-7B qua HuggingFace Inference API (không cần GPU local)."""
+def run_qwen_cloud_inference(question, image_b64, route):
+    """Gọi Qwen2.5-VL qua OpenRouter API (ưu tiên cao, mạng VN không chặn) hoặc HuggingFace."""
+    or_key = get_openrouter_api_key()
     hf_token = get_hf_token()
-    if not hf_token:
+
+    if not or_key and not hf_token:
         return {
-            "error": "HF_TOKEN chưa được cấu hình. Vui lòng đặt biến môi trường HF_TOKEN.",
-            "model": "Qwen2.5-VL-7B (HF API)",
+            "error": "Chưa cấu hình API Key cho Qwen. Vui lòng thêm OPENROUTER_API_KEY hoặc HF_TOKEN.",
+            "model": "Qwen2.5-VL (Cloud)",
             "route": route
         }
 
@@ -420,79 +453,117 @@ def run_hf_qwen_inference(question, image_b64, route):
         }
     ]
 
-    headers = {
-        "Authorization": f"Bearer {hf_token}",
-        "Content-Type": "application/json"
+    route_labels = {
+        "direct": "No-CoT (Trực tiếp)",
+        "no_cot": "No-CoT (Trực tiếp)",
+        "cot": "Standard CoT (Từng bước)",
+        "adaptive": "Adaptive LoRA CoT" if ENGINE_STATE.get("lora_loaded") else "Adaptive CoT"
     }
-    payload = {
-        "model": HF_MODEL,
-        "messages": messages,
-        "max_tokens": 512,
-        "temperature": 0.1
-    }
+    meta = MODE_BENCHMARKS.get(route, MODE_BENCHMARKS.get("adaptive", {}))
 
-    t0 = time.time()
-    try:
-        # Thử endpoint chính (api-inference.huggingface.co)
-        last_err = None
-        resp = None
-        for url in [HF_API_URL, HF_API_URL_FALLBACK]:
+    # --- ƯU TIÊN 1: OPENROUTER API (Hoạt động ổn định trên mạng VN) ---
+    if or_key:
+        headers = {
+            "Authorization": f"Bearer {or_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:8501",
+            "X-Title": "VLM-Charts VQA Demo"
+        }
+        for model_name in [OPENROUTER_MODEL, OPENROUTER_FALLBACK_MODEL]:
+            payload = {
+                "model": model_name,
+                "messages": messages,
+                "max_tokens": 512,
+                "temperature": 0.1
+            }
+            t0 = time.time()
             try:
-                resp = _requests.post(url, headers=headers, json=payload, timeout=90)
-                resp.raise_for_status()
-                break  # thành công
-            except Exception as e:
-                last_err = e
-                resp = None
+                resp = _requests.post(OPENROUTER_API_URL, headers=headers, json=payload, timeout=60)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    answer = data["choices"][0]["message"]["content"]
+                    elapsed = round(time.time() - t0, 2)
+                    clean_ans = clean_latex_and_symbols(answer)
+                    model_display = "Qwen2.5-VL-72B (OpenRouter Cloud)" if "72b" in model_name else "Qwen3-VL-8B (OpenRouter Cloud)"
+                    return {
+                        "pred": clean_ans,
+                        "thought": f"[{model_display}] Chế độ: {route_labels.get(route, route)}.\nMô hình thị giác Qwen suy luận trực tiếp qua OpenRouter Cloud API — thời gian thực, không tốn VRAM máy.",
+                        "latency": f"{elapsed} giây (OpenRouter Cloud)",
+                        "model": model_display,
+                        "engine": "hf_qwen",
+                        "mode": route,
+                        "mode_name": meta.get("name", route_labels.get(route, route)),
+                        "charxiv_acc": meta.get("charxiv_acc", "39.60%"),
+                        "slake_acc": meta.get("slake_acc", "52.59%"),
+                        "benchmark_info": f"Mô hình {model_display} | Mốc offline: SLAKE {meta.get('slake_acc','52.59%')} · CharXiv {meta.get('charxiv_acc','39.60%')}"
+                    }
+                else:
+                    err_json = resp.json() if resp.headers.get("content-type", "").startswith("application/json") else {}
+                    err_msg = err_json.get("error", {}).get("message", resp.text[:120])
+                    # Nếu lỗi về token/credits thử model tiếp theo
+                    continue
+            except Exception:
                 continue
-        if resp is None:
-            raise last_err
-        data = resp.json()
-        answer = data["choices"][0]["message"]["content"]
-        elapsed = round(time.time() - t0, 2)
 
-        # Xác định nhãn route
-        route_labels = {
-            "direct": "No-CoT (Trực tiếp)",
-            "no_cot": "No-CoT (Trực tiếp)",
-            "cot": "Standard CoT (Từng bước)",
-            "adaptive": "Adaptive LoRA CoT" if ENGINE_STATE.get("lora_loaded") else "Adaptive CoT"
+    # --- ƯU TIÊN 2: HUGGINGFACE INFERENCE API (Fallback) ---
+    if hf_token:
+        headers = {
+            "Authorization": f"Bearer {hf_token}",
+            "Content-Type": "application/json"
         }
+        payload = {
+            "model": HF_MODEL,
+            "messages": messages,
+            "max_tokens": 512,
+            "temperature": 0.1
+        }
+        t0 = time.time()
+        try:
+            last_err = None
+            resp = None
+            for url in [HF_API_URL, HF_API_URL_FALLBACK]:
+                try:
+                    resp = _requests.post(url, headers=headers, json=payload, timeout=90)
+                    resp.raise_for_status()
+                    break
+                except Exception as e:
+                    last_err = e
+                    resp = None
+                    continue
+            if resp is None:
+                raise last_err
+            data = resp.json()
+            answer = data["choices"][0]["message"]["content"]
+            elapsed = round(time.time() - t0, 2)
+            clean_ans = clean_latex_and_symbols(answer)
+            return {
+                "pred": clean_ans,
+                "thought": f"[Qwen2.5-VL-7B · HuggingFace API] Chế độ: {route_labels.get(route, route)}.\nMô hình suy luận qua HF Inference API — không cần GPU local.",
+                "latency": f"{elapsed} giây (HF API)",
+                "model": "Qwen2.5-VL-7B-Instruct (HF API)",
+                "engine": "hf_qwen",
+                "mode": route,
+                "mode_name": meta.get("name", route_labels.get(route, route)),
+                "charxiv_acc": meta.get("charxiv_acc", "39.60%"),
+                "slake_acc": meta.get("slake_acc", "52.59%"),
+                "benchmark_info": f"Mô hình Qwen2.5-VL-7B qua HuggingFace API | Mốc offline: SLAKE {meta.get('slake_acc','52.59%')} · CharXiv {meta.get('charxiv_acc','39.60%')}"
+            }
+        except Exception as e:
+            err_str = str(e)
+            return {
+                "error": f"Lỗi gọi Qwen API: {err_str[:120]}",
+                "model": "Qwen2.5-VL (Cloud)",
+                "route": route
+            }
 
-        meta = MODE_BENCHMARKS.get(route, MODE_BENCHMARKS.get("adaptive", {}))
-        clean_answer = clean_latex_and_symbols(answer)
-        return {
-            "pred": clean_answer,
-            "thought": f"[Qwen2.5-VL-7B · HuggingFace API] Chế độ: {route_labels.get(route, route)}. Mô hình suy luận qua HF Inference API (Novita router) — không cần GPU local.",
-            "latency": f"{elapsed} giây (HF API)",
-            "model": "Qwen2.5-VL-7B-Instruct (HF API)",
-            "engine": "hf_qwen",
-            "mode": route,
-            "mode_name": meta.get("name", route_labels.get(route, route)),
-            "charxiv_acc": meta.get("charxiv_acc", "39.60%"),
-            "slake_acc": meta.get("slake_acc", "52.59%"),
-            "benchmark_info": f"Mô hình Qwen2.5-VL-7B qua HuggingFace API | Mốc offline: SLAKE {meta.get('slake_acc','52.59%')} · CharXiv {meta.get('charxiv_acc','39.60%')}"
-        }
-    except Exception as e:
-        err_str = str(e)
-        # Phân loại lỗi rõ ràng hơn cho người dùng
-        if "NameResolutionError" in err_str or "getaddrinfo failed" in err_str or "Could not resolve" in err_str:
-            user_msg = (
-                "Mạng hiện tại chặn kết nối đến HuggingFace. "
-                "Giải pháp: (1) Dùng VPN rồi thử lại, hoặc "
-                "(2) Chuyển sang engine Cloud VLM (Gemini) vẫn hoạt động bình thường."
-            )
-        elif "401" in err_str or "Unauthorized" in err_str:
-            user_msg = "HF_TOKEN không hợp lệ hoặc hết hạn. Vui lòng tạo token mới tại huggingface.co/settings/tokens."
-        elif "timeout" in err_str.lower():
-            user_msg = "Kết nối đến HuggingFace bị timeout. Thử lại sau hoặc dùng Cloud VLM."
-        else:
-            user_msg = f"Lỗi kết nối HuggingFace: {err_str[:120]}"
-        return {
-            "error": user_msg,
-            "model": "Qwen2.5-VL-7B (HF API)",
-            "route": route
-        }
+    return {
+        "error": "Không thể kết nối đến máy chủ Qwen. Vui lòng kiểm tra OPENROUTER_API_KEY hoặc HF_TOKEN.",
+        "model": "Qwen2.5-VL (Cloud)",
+        "route": route
+    }
+
+# Alias để tương thích
+run_hf_qwen_inference = run_qwen_cloud_inference
 
 
 def probe_nvidia_smi():
@@ -772,6 +843,9 @@ class DemoHandler(BaseHTTPRequestHandler):
         # API trạng thái hệ thống và đo kiểm phần cứng GPU
         if path == "/api/engine_status":
             hw = get_hardware_telemetry()
+            or_key = get_openrouter_api_key()
+            hf_token = get_hf_token()
+            qwen_ready = bool(or_key or hf_token)
             data = {
                 "active_engine": ENGINE_STATE["active_engine"],
                 "hardware": hw,
@@ -779,11 +853,13 @@ class DemoHandler(BaseHTTPRequestHandler):
                 "local_error": ENGINE_STATE["local_error"],
                 "lora_loaded": ENGINE_STATE["lora_loaded"],
                 "lora_path": ENGINE_STATE["lora_path"],
-                # Thông tin HF API engine
-                "hf_token_configured": bool(get_hf_token()),
-                "qwen_engine": "hf_api",
-                "qwen_model": "Qwen2.5-VL-7B-Instruct",
-                "qwen_via": "HuggingFace Inference API (Novita)"
+                # Thông tin Qwen Cloud Engine
+                "qwen_configured": qwen_ready,
+                "openrouter_configured": bool(or_key),
+                "hf_token_configured": bool(hf_token),
+                "qwen_engine": "openrouter" if or_key else "hf_api",
+                "qwen_model": "Qwen2.5-VL-72B" if or_key else "Qwen2.5-VL-7B-Instruct",
+                "qwen_via": "OpenRouter Cloud API (Sẵn sàng · Không chặn mạng)" if or_key else "HuggingFace Inference API"
             }
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")

@@ -17,7 +17,7 @@
       <span class="brand-title">Hỏi Đáp Thị Giác VLM</span>
       <div class="engine-switch" id="engineSwitch">
         <button type="button" class="btn-engine active" data-engine="cloud" id="btnEngineCloud" title="Chạy qua Cloud Gemini API (nhanh, nhẹ, không tốn VRAM)">Cloud VLM</button>
-        <button type="button" class="btn-engine" data-engine="hf_qwen" id="btnEngineLocal" title="Qwen2.5-VL-7B qua HuggingFace Inference API · Cần HF_TOKEN · Không cần GPU">Qwen 7B (HF API)</button>
+        <button type="button" class="btn-engine" data-engine="hf_qwen" id="btnEngineLocal" title="Mô hình Qwen2.5-VL qua OpenRouter Cloud · Không cần GPU máy">Qwen2.5-VL (Cloud)</button>
       </div>
     </div>
 
@@ -35,10 +35,10 @@
     </div>
 
     <div class="header-right">
-      <!-- HF API Status Chip -->
-      <button type="button" class="hw-chip" id="hwChip" title="Trạng thái HuggingFace API · Nhấn để xem chi tiết">
+      <!-- Qwen VL API Status Chip -->
+      <button type="button" class="hw-chip" id="hwChip" title="Trạng thái mô hình Qwen VL · Nhấn để xem chi tiết">
         <span class="hw-dot dot-checking" id="hwDot"></span>
-        <span class="hw-text" id="hwText">HF API</span>
+        <span class="hw-text" id="hwText">Qwen VL</span>
       </button>
 
       <button type="button" class="btn-new-chat" id="btnNewChat">

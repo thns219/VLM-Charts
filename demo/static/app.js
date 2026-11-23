@@ -283,6 +283,9 @@ function closeHwModal() {
   if (hwModal) hwModal.style.display = "none";
 }
 
+let qwenConfigured = false;
+let qwenVia = "OpenRouter";
+
 async function checkEngineStatus() {
   try {
     const res = await fetch("/api/engine_status");
@@ -291,6 +294,8 @@ async function checkEngineStatus() {
     hwTelemetry = data.hardware;
     activeEngine = data.active_engine || "cloud";
     hfTokenConfigured = data.hf_token_configured === true;
+    qwenConfigured = data.qwen_configured === true;
+    qwenVia = data.qwen_via || "OpenRouter";
     updateEngineSwitchUI();
     updateHardwareChipUI();
   } catch (e) {
@@ -302,26 +307,25 @@ async function checkEngineStatus() {
 function updateHardwareChipUI() {
   if (!hwChip || !hwDot || !hwText) return;
 
-  // Hiển thị trạng thái HF API thay vì GPU
-  if (hfTokenConfigured) {
+  if (qwenConfigured) {
     hwDot.className = "hw-dot dot-ready";
-    hwText.textContent = "HF API";
-    hwChip.title = "HuggingFace Token đã cấu hình · Qwen2.5-VL-7B-Instruct sẵn sàng";
+    hwText.textContent = "Qwen Online";
+    hwChip.title = `Mô hình Qwen2.5-VL sẵn sàng (${qwenVia})`;
   } else {
     hwDot.className = "hw-dot dot-warning";
-    hwText.textContent = "HF API";
-    hwChip.title = "HuggingFace Token chưa cấu hình · Chỉ Cloud VLM khả dụng · Nhấn để xem hướng dẫn";
+    hwText.textContent = "Qwen Chờ Key";
+    hwChip.title = "Chưa cấu hình API Key cho Qwen · Chỉ Cloud VLM khả dụng";
   }
 
   // Cập nhật diagHfStatus nếu có
   const diagHfStatus = document.getElementById("diagHfStatus");
   if (diagHfStatus) {
-    diagHfStatus.textContent = hfTokenConfigured ? "Đã cấu hình (HF_TOKEN)" : "Chưa cấu hình";
-    diagHfStatus.style.color = hfTokenConfigured ? "#15803d" : "#b91c1c";
+    diagHfStatus.textContent = qwenConfigured ? `Đã sẵn sàng (${qwenVia})` : "Chưa cấu hình";
+    diagHfStatus.style.color = qwenConfigured ? "#15803d" : "#b91c1c";
   }
   const hwModalWarning = document.getElementById("hwModalWarning");
   if (hwModalWarning) {
-    hwModalWarning.style.display = hfTokenConfigured ? "none" : "block";
+    hwModalWarning.style.display = qwenConfigured ? "none" : "block";
   }
 }
 
@@ -331,7 +335,7 @@ function updateEngineSwitchUI() {
       btnEngineLocal.classList.add("active");
       btnEngineCloud.classList.remove("active");
       if (footerNote) {
-        footerNote.innerHTML = `Mô hình: <strong>Qwen2.5-VL-7B-Instruct · HuggingFace API · Miễn phí với HF Token</strong> · Chế độ: <strong>${selectedMode.toUpperCase()}</strong> · Mốc chuẩn: SLAKE 52.59% · CharXiv 39.60%`;
+        footerNote.innerHTML = `Mô hình: <strong>Qwen2.5-VL (${qwenVia})</strong> · Chế độ: <strong>${selectedMode.toUpperCase()}</strong> · Mốc chuẩn: SLAKE 52.59% · CharXiv 39.60%`;
       }
     } else {
       btnEngineCloud.classList.add("active");
@@ -355,9 +359,9 @@ async function setEngine(engine) {
     const data = await res.json();
     if (data.active_engine) {
       activeEngine = data.active_engine;
-      // Nếu chọn hf_qwen mà chưa có HF_TOKEN → hiện cảnh báo
-      if (activeEngine === "hf_qwen" && !hfTokenConfigured) {
-        showToast("Cần đặt HF_TOKEN để dùng Qwen 7B (HF API). Thêm biến môi trường HF_TOKEN rồi khởi động lại server.");
+      // Nếu chọn Qwen mà chưa có Key → hiện cảnh báo
+      if (activeEngine === "hf_qwen" && !qwenConfigured) {
+        showToast("Cần đặt OPENROUTER_API_KEY hoặc HF_TOKEN để dùng Qwen VL.");
       }
       updateEngineSwitchUI();
     }
