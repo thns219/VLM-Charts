@@ -410,7 +410,7 @@
       "nested_5fold_oof_no_cot": "50.24% +/- 2.31%",
       "nested_5fold_oof_routed": "52.50% +/- 2.23%",
       "nested_5fold_oof_delta": "+2.26% +/- 1.44%",
-      "scientific_conclusion": "Out-of-fold generalization (+2.26% across 5 unseen folds) closely matches the in-sample +2.36%, completely disproving the hypothesis that the gain was caused by post-hoc test set tuning or data snooping."
+      "scientific_conclusion": "Out-of-fold generalization (+2.26% across 5 unseen folds) closely matches the in-sample +2.36%, demonstrating consistent generalizability and mitigating concerns regarding post-hoc rule tuning on the test set."
     }
   },
   "charxiv_factual_breakdown": {

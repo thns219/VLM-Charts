@@ -212,7 +212,7 @@ for _, te in kf.split(charxiv_df):
 print("\n--- 5-Fold Sub-sampling Stability (Mean +/- Std Across Folds) ---")
 print(f"SLAKE:   No-CoT: {np.mean(s_fold_nc):.2f}% +/- {np.std(s_fold_nc):.2f}% | Adaptive: {np.mean(s_fold_ad):.2f}% +/- {np.std(s_fold_ad):.2f}% | Delta: {np.mean(s_fold_diff):+.2f}% +/- {np.std(s_fold_diff):.2f}%")
 print(f"CharXiv: Direct: {np.mean(c_fold_d):.2f}% +/- {np.std(c_fold_d):.2f}% | Routed:   {np.mean(c_fold_r):.2f}% +/- {np.std(c_fold_r):.2f}% | Delta: {np.mean(c_fold_diff):+.2f}% +/- {np.std(c_fold_diff):.2f}%")
-print(f"  -> Routed standard deviation ({np.std(c_fold_r):.2f}%) is lower than Direct ({np.std(c_fold_d):.2f}%), confirming variance reduction.")
+print(f"  -> Routed standard deviation ({np.std(c_fold_r):.2f}%) is narrower than Direct ({np.std(c_fold_d):.2f}%), showing higher cross-fold stability.")
 
 # Sub-group Stratification on CharXiv
 subgroup_analysis = {}
@@ -569,7 +569,7 @@ test_ml_acc = float(np.mean(test_sel)) * 100
 test_nc_acc = float((slake_df["acc_no_cot"].iloc[s_test_idx4] > 0).mean()) * 100
 test_cot_acc = float((slake_df["acc_cot"].iloc[s_test_idx4] > 0).mean()) * 100
 
-print(f"\nSLAKE Out-of-Sample Validation (Disproving Post-hoc Tuning / Data Snooping):")
+print(f"\nSLAKE Out-of-Sample Validation (Controlling Post-hoc Tuning / Data Snooping Risk):")
 print(f"  Holdout Val  (N={len(s_val_idx4)}):  No-CoT = {val_nc_acc:.2f}% | ML Routed = {val_ml_acc:.2f}% (Delta: {val_ml_acc - val_nc_acc:+.2f}%)")
 print(f"  Holdout Test (N={len(s_test_idx4)}): No-CoT = {test_nc_acc:.2f}% | CoT = {test_cot_acc:.2f}% | ML Routed = {test_ml_acc:.2f}% (Delta: {test_ml_acc - test_nc_acc:+.2f}%)")
 print(f"  Nested 5-Fold Out-of-Fold (Full N=1061 Unseen):")
@@ -607,7 +607,7 @@ report["slake_factual_evaluation"] = {
         "nested_5fold_oof_no_cot": f"{oof_mean_nc:.2f}% +/- {oof_std_nc:.2f}%",
         "nested_5fold_oof_routed": f"{oof_mean_ml:.2f}% +/- {oof_std_ml:.2f}%",
         "nested_5fold_oof_delta": f"{oof_mean_delta:+.2f}% +/- {oof_std_delta:.2f}%",
-        "scientific_conclusion": "Out-of-fold generalization (+2.26% across 5 unseen folds) closely matches the in-sample +2.36%, completely disproving the hypothesis that the gain was caused by post-hoc test set tuning or data snooping."
+        "scientific_conclusion": "Out-of-fold generalization (+2.26% across 5 unseen folds) closely matches the in-sample +2.36%, demonstrating consistent generalizability and mitigating concerns regarding post-hoc rule tuning on the test set."
     }
 }
 
