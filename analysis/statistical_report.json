@@ -141,13 +141,13 @@
       }
     },
     "text_only": {
-      "accuracy": 88.0,
-      "macro_f1": 87.82,
-      "weighted_f1": 87.88,
+      "accuracy": 87.0,
+      "macro_f1": 86.84,
+      "weighted_f1": 86.9,
       "confusion_matrix": [
         [
-          50,
-          2
+          49,
+          3
         ],
         [
           10,
@@ -156,28 +156,28 @@
       ],
       "classification_report": {
         "Direct_Zero_Shot": {
-          "precision": 0.8333333333333334,
-          "recall": 0.9615384615384616,
-          "f1-score": 0.8928571428571429,
+          "precision": 0.8305084745762712,
+          "recall": 0.9423076923076923,
+          "f1-score": 0.8828828828828829,
           "support": 52.0
         },
         "Adaptive_LoRA_CoT": {
-          "precision": 0.95,
+          "precision": 0.926829268292683,
           "recall": 0.7916666666666666,
-          "f1-score": 0.8636363636363636,
+          "f1-score": 0.8539325842696629,
           "support": 48.0
         },
-        "accuracy": 0.88,
+        "accuracy": 0.87,
         "macro avg": {
-          "precision": 0.8916666666666666,
-          "recall": 0.8766025641025641,
-          "f1-score": 0.8782467532467533,
+          "precision": 0.878668871434477,
+          "recall": 0.8669871794871795,
+          "f1-score": 0.8684077335762729,
           "support": 100.0
         },
         "weighted avg": {
-          "precision": 0.8893333333333334,
-          "recall": 0.88,
-          "f1-score": 0.8788311688311689,
+          "precision": 0.8767424555601488,
+          "recall": 0.87,
+          "f1-score": 0.8689867395485373,
           "support": 100.0
         }
       }
@@ -269,22 +269,22 @@
   },
   "charxiv_learned_router_vqa": {
     "test_n": 100,
-    "router_classification_accuracy": 88.0,
+    "router_classification_accuracy": 87.0,
     "router_wilson_ci_95": [
-      80.19,
-      93.0
+      79.02,
+      92.24
     ],
     "direct_vqa_acc": 33.0,
     "cot_vqa_acc": 36.0,
     "adaptive_lora_vqa_acc": 37.0,
     "ground_truth_heuristic_vqa_acc": 35.0,
-    "learned_router_vqa_acc": 36.0,
+    "learned_router_vqa_acc": 35.0,
     "learned_router_wilson_ci_95": [
-      27.27,
-      45.76
+      26.36,
+      44.75
     ],
-    "test_delta_vs_direct": 3.0,
-    "test_delta_vs_heuristic": 1.0,
+    "test_delta_vs_direct": 2.0,
+    "test_delta_vs_heuristic": 0.0,
     "nested_5fold_oof_full_500": {
       "router_accuracy": "86.20% +/- 3.19%",
       "direct_vqa_acc": "38.80% +/- 3.49%",

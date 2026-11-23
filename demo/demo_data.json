@@ -648,12 +648,12 @@
       "method": "Text (TF-IDF 2500) + Visual Complexity (Edge density, Laplacian variance, Entropy), 60/20/20 split",
       "support": {"train": 300, "val": 100, "test": 100},
       "vision_only": {"accuracy": 40.0, "macro_f1": 39.78},
-      "text_only": {"accuracy": 88.0, "macro_f1": 87.82},
+      "text_only": {"accuracy": 87.0, "macro_f1": 86.84},
       "multimodal": {
         "accuracy": 88.0,
         "wilson_ci_95": [80.19, 93.0],
         "macro_f1": 87.92,
-        "weighted_f1": 87.99,
+        "weighted_f1": 87.96,
         "confusion_matrix": [[48, 4], [8, 40]],
         "precision": {"direct": 85.71, "adaptive_cot": 90.91},
         "recall": {"direct": 92.31, "adaptive_cot": 83.33}
@@ -663,9 +663,9 @@
         "direct_vqa": 33.0,
         "cot_vqa": 36.0,
         "ground_truth_heuristic_vqa": 35.0,
-        "learned_router_vqa": 36.0,
-        "learned_router_wilson_ci_95": [27.27, 45.76],
-        "test_delta_vs_direct": 3.0,
+        "learned_router_vqa": 35.0,
+        "learned_router_wilson_ci_95": [26.36, 44.75],
+        "test_delta_vs_direct": 2.0,
         "nested_5fold_oof_full_500": {
           "direct_vqa": "38.80% +/- 3.49%",
           "heuristic_vqa": "39.60% +/- 2.24%",

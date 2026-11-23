@@ -174,20 +174,21 @@ def main():
     tr_idx, tmp_idx = train_test_split(idx, test_size=0.40, random_state=42, stratify=y_strat)
     val_idx, te_idx = train_test_split(tmp_idx, test_size=0.50, random_state=42, stratify=y_strat[tmp_idx])
 
-    # Trích xuất đặc trưng văn bản TF-IDF (khớp cấu hình statistical_analysis.py)
+    # Trích xuất đặc trưng văn bản TF-IDF (khớp cấu hình leak-free statistical_analysis.py)
     vec = TfidfVectorizer(max_features=2500, ngram_range=(1, 2))
-    X_txt_all = vec.fit_transform(cx_df["question"].fillna("")).toarray()
+    X_tr = vec.fit_transform(cx_df["question"].iloc[tr_idx].fillna("")).toarray()
+    X_te = vec.transform(cx_df["question"].iloc[te_idx].fillna("")).toarray()
 
-    clf = LogisticRegression(C=1.0, max_iter=500, random_state=42).fit(X_txt_all[tr_idx], y_strat[tr_idx])
-    pred_te = clf.predict(X_txt_all[te_idx])
+    clf = LogisticRegression(C=1.0, max_iter=500, random_state=42).fit(X_tr, y_strat[tr_idx])
+    pred_te = clf.predict(X_te)
     
     router_acc = float((pred_te == y_strat[te_idx]).mean()) * 100
-    all_passed &= check_metric("CharXiv Router Classification Acc (N=100)", router_acc, 88.00)
+    all_passed &= check_metric("CharXiv Router Classification Acc (N=100)", router_acc, 87.00)
 
     # Độ chính xác VQA đầu-cuối trên tập test (N=100)
     vqa_pred_learned = np.where(pred_te == 1, c_ad.iloc[te_idx], c_dir.iloc[te_idx])
     learned_vqa_acc = float(vqa_pred_learned.mean()) * 100
-    all_passed &= check_metric("CharXiv Learned Router VQA Acc (N=100)", learned_vqa_acc, 36.00)
+    all_passed &= check_metric("CharXiv Learned Router VQA Acc (N=100)", learned_vqa_acc, 35.00)
 
     # Đánh giá chéo ngoài mẫu 5-Fold trên toàn bộ 500 câu hỏi
     kf = KFold(n_splits=5, shuffle=True, random_state=42)

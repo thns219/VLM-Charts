@@ -4,7 +4,7 @@
 **Phạm vi áp dụng LoRA:** Tinh chỉnh có giám sát (SFT/LoRA) trên CharXiv Scientific Charts (500 câu hỏi reasoning)  
 **Phạm vi Zero-Shot Prompting:** Định tuyến thích ứng Prompt trên SLAKE Medical VQA (1.061 câu hỏi y khoa)  
 **Ngày cập nhật:** 17/11/2026 (Đã hiệu đính dữ liệu đối chứng 100% khớp mã nguồn thực tế)  
-**Tập lệnh kiểm chứng tự động (Reproducibility):** [`analysis/verify_results.py`](file:///d:/THCN/VLM-Charts/analysis/verify_results.py) (Chạy lệnh `python analysis/verify_results.py` để tự động kiểm tra 100% các chỉ số trong báo cáo)
+**Tập lệnh kiểm chứng tự động (Reproducibility):** [`analysis/verify_results.py`](file:///d:/THCN/VLM-Charts/analysis/verify_results.py) và [`analysis/supplementary_checks.py`](file:///d:/THCN/VLM-Charts/analysis/supplementary_checks.py) (Chạy lệnh `python analysis/verify_results.py` và `python analysis/supplementary_checks.py` để tự động kiểm tra 100% các chỉ số trong báo cáo)
 
 ---
 
@@ -49,21 +49,21 @@ Ghép nối đặc trưng: $X_{\text{multimodal}} = \left[ X_{\text{textual}} \,
 #### 2.3. Bảng Phân tích Cắt bỏ (Ablation Study trên CharXiv Test Set $N=100$)
 | Cấu hình Router | Đặc trưng đầu vào | Accuracy | Macro F1 | Weighted F1 | Precision (Direct / CoT) | Recall (Direct / CoT) |
 |---|---|---|---|---|---|---|
-| **Vision-Only** | 4 chỉ số phức tạp hình học | 40.00% | 39.78% | 40.11% | 0.42 / 0.38 | 0.40 / 0.40 |
-| **Text-Only** | 2.500 TF-IDF N-grams | 88.00% | 87.82% | 87.93% | 0.85 / 0.91 | 0.92 / 0.83 |
-| **Multimodal (Đề xuất)** | **Text + Visual Complexity** | **88.00%** | **87.92%** | **87.99%** | **0.86 / 0.91** | **0.92 / 0.83** |
+| **Vision-Only** | 4 chỉ số phức tạp hình học | 40.00% | 39.78% | 39.93% | 0.43 / 0.37 | 0.44 / 0.35 |
+| **Text-Only** | 2.500 TF-IDF N-grams (Leak-Free) | 87.00% | 86.84% | 86.90% | 0.83 / 0.95 | 0.96 / 0.79 |
+| **Multimodal (Đề xuất)** | **Text + Visual Complexity** | **88.00%** | **87.92%** | **87.96%** | **0.86 / 0.91** | **0.92 / 0.83** |
 
-*Ý nghĩa:* Nhánh thị giác đơn lẻ không đủ để đoán ý định câu hỏi (40%), nhưng khi kết hợp với văn bản, Precision của nhánh Direct tăng lên 85.71% (so với 85.0%), giúp tăng độ tin cậy khi ngắt CoT trên các biểu đồ đơn giản.
+*Ý nghĩa:* Nhánh thị giác đơn lẻ không đủ để đoán ý định câu hỏi (40%), nhưng khi kết hợp với văn bản, Precision của nhánh Direct tăng lên 85.71% (so với 83.05%), giúp tăng độ tin cậy khi ngắt CoT trên các biểu đồ đơn giản.
 
 #### 2.4. Đo lường Hiệu năng VQA Đầu-cuối khi Dùng Bộ Định tuyến Học được (End-to-End VQA Without Metadata)
-Để giải quyết dứt điểm nghi vấn: *"Bộ định tuyến đạt 88.0% phân loại nhãn (khoảng Wilson 95%: 80.2% - 93.0%), nhưng độ chính xác VQA khi dùng bộ định tuyến học được vẫn chưa được đo"*, đề tài đã đo lường trực tiếp độ chính xác VQA thực tế khi **suy luận hoàn toàn tự động từ câu hỏi (không dùng bất kỳ nhãn `sub_type` metadata nào)**:
+Để giải quyết dứt điểm nghi vấn: *"Bộ định tuyến đạt 87.0% phân loại nhãn (khoảng Wilson 95%: 79.02% - 92.24%), nhưng độ chính xác VQA khi dùng bộ định tuyến học được vẫn chưa được đo"*, đề tài đã đo lường trực tiếp độ chính xác VQA thực tế khi **suy luận hoàn toàn tự động từ câu hỏi (không dùng bất kỳ nhãn `sub_type` metadata nào)**:
 
-1. **Trên Tập Kiểm thử Độc lập ($N = 100$ câu hỏi):**
+1. **Trên Phân tập Kiểm thử Giữ lại (Holdout Test Split $N = 100$ câu hỏi CharXiv):**
    - **Direct Zero-Shot Baseline:** $33.00\%$ ($33/100$)
    - **Standard CoT:** $36.00\%$ ($36/100$)
    - **Heuristic dựa trên nhãn thật (`sub_type` có sẵn):** $35.00\%$ ($35/100$)
-   - **VQA khi chạy bằng Bộ Định tuyến Học được (Learned Router):** **$36.00\%$** ($36/100$, khoảng Wilson 95%: **$[27.27\%, 45.76\%]$**)
-   - *Phát hiện học thuật thú vị:* Bộ định tuyến học máy đạt **$36.00\%$**, **vượt $+1.00\%$ so với Heuristic tĩnh ($35.00\%$)** và **tăng $+3.00\%$ so với Direct Baseline ($33.00\%$)**. Lý do là vì quy tắc Heuristic tĩnh chia cứng ("cứ Number là ép LoRA CoT") dẫn đến một số câu hỏi số học đơn giản bị sai khi ép suy luận phức tạp; bộ định tuyến học máy nhận biết được ngữ cảnh câu hỏi và linh hoạt đưa về Direct, giúp sửa đúng thêm mẫu này (ví dụ câu hỏi #396).
+   - **VQA khi chạy bằng Bộ Định tuyến Học được (Learned Router):** **$35.00\%$** ($35/100$, khoảng Wilson 95%: **$[26.36\%, 44.75\%]$**)
+   - *Phát hiện thực nghiệm:* Bộ định tuyến học máy hoàn toàn không rò rỉ đạt **$35.00\%$**, tái lập tương đương $100\%$ kết quả của Heuristic nhãn thật ($35.00\%$) và vượt **$+2.00\%$** so với Direct Baseline ($33.00\%$) mà hoàn toàn không cần nhãn metadata trợ giúp lúc kiểm thử.
 
 2. **Trên Đánh giá Chéo Ngoài mẫu 5-Fold (Nested Out-of-Fold trên toàn bộ $N = 500$ câu hỏi CharXiv):**
    - **Direct Zero-Shot Baseline:** $38.80\% \pm 3.49\%$ ($194/500$)
@@ -98,21 +98,26 @@ Cần làm rõ: **Trên SLAKE hoàn toàn KHÔNG sử dụng mô hình tinh ch�
 | **OPEN (Câu hỏi mở)** | 645 câu (60.8%) | 37.83% | 35.66% | **40.62%** | **Tăng +2.79% điểm**: Nhờ Prompt suy luận có cấu trúc chẩn đoán y khoa. |
 | **TOÀN BỘ SLAKE** | **1.061 câu** | **50.24%** | **45.90%** | **52.59%** | **McNemar: $\chi^2 = 8.35, \, p = 0.0039$ (Có ý nghĩa thống kê)** |
 
-#### 3.3. Kiểm chứng Độc lập Ngoài Mẫu (Out-of-Sample Validation & Kiểm soát Rủi ro Data Snooping)
-Để giải quyết thấu đáo nghi vấn học thuật: *"Luật định tuyến được viết sau khi xem kết quả tập test, thiếu tập validation riêng nên mức tăng +2.36% có thể lạc quan"*, đề tài đã triển khai quy trình kiểm chứng độc lập ngoài mẫu:
+#### 3.3. Kiểm chứng Ngoài Mẫu trên SLAKE (Out-of-Sample Validation & Kiểm soát Rủi ro Data Snooping)
+Để giải quyết thấu đáo nghi vấn học thuật: *"Luật định tuyến được viết sau khi xem kết quả tập test, thiếu tập validation riêng nên mức tăng +2.36% có thể lạc quan"*, đề tài đã triển khai quy trình kiểm chứng ngoài mẫu:
 
-1. **Phân tách Độc lập Train (60%) / Validation (20%) / Hold-out Test (20%):**
-   - Bộ Router (TF-IDF + Logistic Regression) được huấn luyện **CHỈ trên tập Train ($N=636$)** với tham số mặc định chuẩn mực ($C=1.0$, không quét tìm siêu tham số để tránh quá khớp bổ sung), dùng **tập Validation ($N=212$)** làm bước kiểm tra khả năng phân loại trung gian, trước khi đánh giá hiệu năng VQA thực tế trên **tập Test độc lập ($N=213$)**:
+1. **Phân chia Nội bộ Train (60%) / Validation (20%) / Holdout Test (20%):**
+   - *Lưu ý quan trọng về bản chất dữ liệu:* Toàn bộ $1.061$ câu hỏi này vốn trích từ tập test chính thức của SLAKE. Do đó, việc chia nhỏ 60/20/20 ở đây đóng vai trò là **phân tập kiểm thử giữ lại nội bộ (internal holdout split)** để mô phỏng quy trình kiểm tra ngoài mẫu của bộ định tuyến, chứ không phải là một tập dữ liệu kiểm thử độc lập bên ngoài (external independent benchmark).
+   - Bộ Router (TF-IDF + Logistic Regression) được huấn luyện **CHỈ trên tập Train ($N=636$)** với tham số mặc định chuẩn mực ($C=1.0$, không quét tìm siêu tham số để tránh quá khớp bổ sung), dùng **tập Validation ($N=212$)** làm bước kiểm tra trung gian, trước khi đánh giá hiệu năng VQA thực tế trên **phân tập Holdout Test ($N=213$)**:
      - *Tập Validation ($N=212$):* No-CoT = $53.30\%$ | ML Routed = $52.83\%$
-     - *Tập Test Độc lập ($N=213$ chưa từng xuất hiện):* No-CoT = $52.58\%$ | CoT = $47.42\%$ | **ML Routed = $57.28\%$ (Tăng vọt $+4.69\%$)**
+     - *Phân tập Holdout Test ($N=213$):* No-CoT = $52.58\%$ | CoT = $47.42\%$ | **ML Routed = $57.28\%$ (Tăng $+4.69\%$)**
 
-2. **Kiểm định Chéo Lồng ghép Ngoài mẫu (Nested 5-Fold Out-of-Fold Generalization trên toàn bộ $N=1.061$ mẫu):**
+2. **Kiểm định Chéo Lồng ghép Ngoài mẫu (Nested 5-Fold Out-of-Fold trên toàn bộ $N=1.061$ mẫu SLAKE):**
    - Toàn bộ $1.061$ câu hỏi được chia 5 phần; tại mỗi fold, Router học trên 4 fold huấn luyện ($80\%$) và dự đoán trên fold kiểm thử ($20\%$). Toàn bộ quyết định định tuyến đều diễn ra trên dữ liệu chưa từng thấy:
      - Baseline No-CoT: $50.24\% \pm 2.31\%$
      - **Out-of-Fold ML Routed:** **$52.50\% \pm 2.23\%$**
-     - **Out-of-Fold Delta:** **$+2.26\% \pm 1.44\%$ (Chiến thắng ở cả 5/5 fold kiểm thử)**
+     - **Out-of-Fold Delta:** **$+2.26\% \pm 1.44\%$** (duy trì giá trị chênh lệch dương trên toàn bộ 5 fold kiểm thử)
 
-*Ý nghĩa phương pháp luận:* Mức tăng Out-of-Fold thực tế ($+2.26\%$) tương đương với mức chênh lệch toàn tập ban đầu ($+2.36\%$, sai số $0.10\%$ tương đương 1 câu hỏi). Kết quả thực nghiệm ngoài mẫu này cho thấy: **khi không nhìn trước câu hỏi kiểm thử, bộ định tuyến học máy vẫn tái hiện được mức cải thiện tương đương**, qua đó **giảm thiểu đáng kể mối lo ngại về việc kết quả chỉ là hệ quả của việc tinh chỉnh luật thủ công sau khi xem tập test (post-hoc tuning / data snooping)**. Định tuyến thích ứng dựa trên bản chất lâm sàng của câu hỏi có khả năng tổng quát hóa tốt.
+*Ý nghĩa phương pháp luận & Giới hạn cần thừa nhận:*
+- Mức tăng Out-of-Fold thực tế ($+2.26\%$) tương đương với mức chênh lệch toàn tập ban đầu ($+2.36\%$, sai số $0.10\%$ tương đương 1 câu hỏi).
+- **Về tính ổn định nội bộ:** Đánh giá 5-fold cross-validation chứng minh **tính ổn định nội bộ (internal consistency/stability)** của bộ phân loại học máy trong việc học và tái lập lại các quyết định của luật phân loại dựa trên đặc trưng từ khóa câu hỏi mà không bị phụ thuộc vào việc ghi nhớ dữ liệu.
+- **Về giới hạn tổng quát hóa:** Vì các nhãn huấn luyện cho bộ phân loại vốn được sinh ra từ chính quy tắc heuristic đã được tác giả quan sát và hoàn thiện sau khi xem dữ liệu test, quy trình 5-fold này **chưa thể khẳng định là khả năng tổng quát hóa thực sự (true out-of-distribution generalization)** sang các phân phối câu hỏi y khoa hoàn toàn mới bên ngoài SLAKE. Mức tăng $+2.36\%$ trên toàn bộ 1.061 câu hỏi vẫn có thể mang tính lạc quan nhất định do nguồn gốc post-hoc của quy tắc định tuyến ban đầu, và điều này cần được báo cáo minh bạch về mặt học thuật.
+- **Về độ lệch chuẩn K-Fold:** Cần phân biệt rõ: độ lệch chuẩn giữa các fold ($\pm 2.23\%$) phản ánh **độ phân tán hiệu năng giữa các phân tập con ngẫu nhiên (partition variability across subsamples)**, tuyệt đối **không đo độ ổn định giữa các lần chạy lặp lại của mô hình (run-to-run execution variance)**. Do toàn bộ quá trình suy luận sử dụng cơ chế giải mã tham lam tất định (Greedy Decoding với $temperature = 0.0$ và $do\_sample = False$), độ biến thiên giữa các lần chạy lặp lại là bằng 0.
 
 ---
 
@@ -178,7 +183,7 @@ Tổng Dự đoán               56                     44                     1
 | | *Oracle (Direct + Adaptive LoRA)* | *49.20%* | *[44.80%, 53.60%]* | $+10.40\%$ $[+6.80\%, +14.20\%]$ | — | — |
 
 *Ghi chú quan trọng về Độ lệch chuẩn (Std):*
-- Trên CharXiv, độ lệch chuẩn giữa 5 fold kiểm thử của nhánh **Adaptive Routed là $\pm 2.24\%$** (thấp hơn so với Direct $\pm 3.49\%$ và CoT $\pm 4.79\%$). Điều này cho thấy **độ phân tán hiệu năng giữa các phân tập con của CharXiv ở nhánh định tuyến là tương đối hẹp hơn**, thể hiện tính ổn định tương đối qua các cấu trúc biểu đồ khác nhau mà không khẳng định thái quá về giảm phương sai theo nghĩa lý thuyết thống kê hẹp.
+- Trên CharXiv, độ lệch chuẩn giữa 5 fold kiểm thử của nhánh **Adaptive Routed là $\pm 2.24\%$** (thấp hơn so với Direct $\pm 3.49\%$ và CoT $\pm 4.79\%$). Cần lưu ý rằng **độ lệch chuẩn giữa các fold phản ánh độ phân tán hiệu năng giữa các phân tập con ngẫu nhiên (partition variability across subsamples), tuyệt đối không đo độ ổn định giữa các lần chạy lặp lại của mô hình** (bởi vì dưới chế độ giải mã tham lam greedy decoding với temperature = 0.0, độ biến thiên giữa các lần chạy lặp lại là bằng 0). Độ phân tán hẹp hơn giữa các fold chỉ phản ánh tính đồng đều tương đối của hiệu năng qua các tập con biểu đồ khác nhau trong nội bộ tập dữ liệu, hoàn toàn không mang ý nghĩa khẳng định thái quá về giảm phương sai theo lý thuyết thống kê hẹp.
 
 #### Bảng 4: Bóc tách Phân tầng trên CharXiv (Sub-group Stratification — Nơi Chênh lệch Thực sự Xuất hiện)
 | Nhóm câu hỏi (`sub_type`) | Số lượng ($N$) | Direct Zero-Shot | Standard CoT | Adaptive LoRA CoT | **Adaptive Routed** | Chênh lệch $\Delta$ vs Direct |
@@ -215,11 +220,11 @@ Tổng Dự đoán               56                     44                     1
 #### Câu hỏi 4: *"Mỗi cấu hình chỉ chạy một lần, chưa đo độ dao động giữa các lần chạy; nhiều chênh lệch trên CharXiv nhỏ hơn khoảng tin cậy?"*
 > **Trả lời chuẩn:**  
 > *"Dạ thưa Thầy/Cô:  
-> 1. **Về tính tất định của lần chạy:** Trong thực nghiệm VLM, đề tài sử dụng chiến lược giải mã tham lam (Greedy Decoding với temperature = 0.0), do đó trên cùng một checkpoint và tập dữ liệu kiểm thử cố định, kết quả chạy lặp lại là tất định 100% (độ lệch chuẩn bằng 0).  
+> 1. **Về tính tất định của lần chạy:** Trong thực nghiệm VLM, đề tài sử dụng chiến lược giải mã tham lam (Greedy Decoding với temperature = 0.0, do_sample = False), do đó trên cùng một checkpoint và tập dữ liệu kiểm thử cố định, kết quả chạy lặp lại là tất định 100% (độ lệch chuẩn giữa các lần chạy bằng 0).  
 > 2. **Về việc chênh lệch nhỏ hơn khoảng tin cậy:** Đây là vấn đề **ngộ nhận so sánh khoảng tin cậy độc lập (Independent CI Overlap)** trong thực nghiệm ghép cặp. Vì cả 2 phương pháp được đánh giá trên **cùng một bộ 500 câu hỏi** (Within-subject design), đại lượng thống kê chuẩn xác cần xét là **Khoảng tin cậy của Chênh lệch Ghép cặp ($\Delta = \text{Routed} - \text{Direct}$)**.  
 >    - Trên **SLAKE**: Khoảng tin cậy 95% của $\Delta$ là **$[+0.75\%, +3.96\%]$** (hoàn toàn dương, không chứa 0), chứng minh mức tăng $+2.36\%$ là vững chắc trước mọi dao động mẫu.  
 >    - Trên **CharXiv**: Khoảng tin cậy 95% của $\Delta$ là $[-2.00\%, +3.60\%]$ (chứa 0), đề tài thừa nhận thẳng thắn mức tăng $+0.80\%$ chưa có ý nghĩa thống kê ở quy mô toàn tập.  
-> 3. **Về độ ổn định qua K-Fold:** Đề tài đã thực hiện **5-Fold Cross-Subsampling**: độ lệch chuẩn giữa các fold của nhánh Adaptive Routed đạt **$\pm 2.24\%$**, có độ phân tán hẹp hơn so với Direct ($\pm 3.49\%$) và CoT ($\pm 4.79\%$), cho thấy tính ổn định tương đối qua các phân tập biểu đồ khác nhau mà không khẳng định thái quá về giảm phương sai theo nghĩa lý thuyết hẹp."*
+> 3. **Về độ ổn định qua K-Fold:** Đề tài đã thực hiện **5-Fold Cross-Subsampling**: độ lệch chuẩn giữa các fold của nhánh Adaptive Routed đạt **$\pm 2.24\%$**, có độ phân tán hẹp hơn so với Direct ($\pm 3.49\%$) và CoT ($\pm 4.79\%$). Cần làm rõ: độ lệch chuẩn này phản ánh độ phân tán giữa các phân tập con ngẫu nhiên (partition variability across subsamples), không phải độ dao động giữa các lần chạy lặp lại của mô hình (vốn bằng 0 do giải mã tham lam tất định)."*
 
 #### Câu hỏi 5: *"Thiếu do_sample=False ở baseline và RAG-VQA, Gemini dùng nhiệt độ mặc định. So sánh giữa baseline và CoT có thể bị nhiễu do khác điều kiện giải mã?"*
 > **Trả lời chuẩn:**  
@@ -227,24 +232,23 @@ Tổng Dự đoán               56                     44                     1
 > 1. **Về các mô hình Qwen (Baseline, CoT, RAG-VQA):** Trong thư viện HuggingFace Transformers, cấu hình sinh mặc định (`generation_config.json`) của Qwen2.5-VL vốn hoạt động ở chế độ Greedy Search. Để đảm bảo tính tường minh và loại trừ hoàn toàn nguy cơ sai khác ngẫu nhiên, mã nguồn đã được cập nhật tường minh `do_sample=False` tại tất cả các pipeline (`baseline_qwen.py`, `rag_vqa_pipeline.py`, `colab_all_in_one.py`, `kaggle_slake_cot.py`).  
 > 2. **Về mô hình Gemini API:** Đề tài đã đồng bộ hóa cấu hình giải mã thông qua `genai.types.GenerateContentConfig(temperature=0.0, top_p=1.0)` tại cả `baseline_gemini.py` và `rag_gemini_pipeline.py`. Thiết lập nhiệt độ $0.0$ ép Gemini chọn token có xác suất cao nhất tại mỗi bước, đảm bảo tính tất định và triệt tiêu hoàn toàn sự chênh lệch do điều kiện giải mã (Fair Comparison), giúp kết quả so sánh giữa Baseline, RAG và CoT hoàn toàn khách quan."*
 
-#### Câu hỏi 6: *"Bộ định tuyến trên CharXiv dùng nhãn sub_type có sẵn; bộ phân loại học được đạt 88.0% độ chính xác nhãn (khoảng Wilson 95%: 80.2% - 93.0%), nhưng độ chính xác VQA khi dùng bộ định tuyến học được đã đo chưa?"*
+#### Câu hỏi 6: *"Bộ định tuyến trên CharXiv dùng nhãn sub_type có sẵn; bộ phân loại học được đạt 87.0% độ chính xác nhãn (khoảng Wilson 95%: 79.0% - 92.2%), nhưng độ chính xác VQA khi dùng bộ định tuyến học được đã đo chưa?"*
 > **Trả lời chuẩn:**  
-> *"Dạ thưa Thầy/Cô, chúng em đã thực hiện đo lường đầy đủ độ chính xác VQA đầu-cuối (End-to-End VQA Accuracy) khi sử dụng chiến lược do Bộ định tuyến học máy dự đoán hoàn toàn tự động từ câu hỏi (không cần bất kỳ nhãn `sub_type` metadata nào):  
-> 1. **Trên Tập Test độc lập ($N=100$):**  
+> *"Dạ thưa Thầy/Cô, chúng em đã thực hiện đo lường đầy đủ độ chính xác VQA đầu-cuối (End-to-End VQA Accuracy) khi sử dụng chiến lược do Bộ định tuyến học máy dự đoán hoàn toàn tự động từ câu hỏi (không cần bất kỳ nhãn `sub_type` metadata nào và được huấn luyện hoàn toàn không rò rỉ dữ liệu - leak-free):  
+> 1. **Trên Phân tập Kiểm thử Giữ lại ($N=100$):**  
+>    - Bộ phân loại văn bản TF-IDF đạt độ chính xác gán nhãn: **$87.00\%$** (Wilson 95% CI: $[79.02\%, 92.24\%]$).  
 >    - Direct Zero-Shot đạt: $33.00\%$ ($33/100$)  
 >    - Heuristic dùng nhãn thật đạt: $35.00\%$ ($35/100$)  
->    - **VQA dùng Bộ định tuyến học được:** đạt **$36.00\%$** ($36/100$, Khoảng Wilson 95%: $[27.27\%, 45.76\%]$), tăng **$+3.00\%$** so với Direct Baseline.  
->    - *Bộ định tuyến học được thậm chí vượt Heuristic tĩnh $+1.00\%$* (36% so với 35%), vì nó nhận diện được ngữ cảnh câu hỏi và sửa đúng các trường hợp mà luật Heuristic cứng ép sai sang LoRA CoT (ví dụ câu hỏi biểu đồ #396).  
+>    - **VQA dùng Bộ định tuyến học được:** đạt **$35.00\%$** ($35/100$, Khoảng Wilson 95%: $[26.36\%, 44.75\%]$), tăng **$+2.00\%$** so với Direct Baseline và tái lập tương đương $100\%$ kết quả của Heuristic nhãn thật.  
 > 2. **Trên Đánh giá Chéo Ngoài Mẫu 5-Fold (Nested Out-of-Fold trên toàn bộ $N=500$ câu CharXiv):**  
 >    - Heuristic dùng nhãn thật đạt: $39.60\% \pm 2.24\%$ ($198/500$)  
 >    - **VQA dùng Bộ định tuyến học được:** đạt **$39.40\% \pm 3.20\%$** ($197/500$).  
->    - Mức suy hao do sai số phân loại của router là **cực kỳ nhỏ: chỉ giảm đúng 1 câu duy nhất trên 500 câu ($-0.20\%$)**, và vẫn vượt Baseline Direct ($38.80\%$) một mức $+0.60\%$.  
+>    - Mức suy hao do sai số phân loại của router là **rất nhỏ: chỉ giảm đúng 1 câu duy nhất trên 500 câu ($-0.20\%$)**, và vẫn duy trì cao hơn Baseline Direct ($38.80\%$) một mức $+0.60\%$.  
 > Điều này khẳng định hệ thống định tuyến tự động hoàn toàn có thể triển khai thực tế độc lập mà không cần bất kỳ nhãn metadata phụ trợ nào."*
 
 #### Câu hỏi 7: *"Luật định tuyến trên SLAKE có nguy cơ bị Data Snooping do tinh chỉnh sau khi xem tập test không?"*
 > **Trả lời chuẩn:**  
-> *"Dạ thưa Thầy/Cô:  
-> 1. Về mặt nguyên lý ban đầu, luật định tuyến xuất phát từ **nguyên lý an toàn lâm sàng (Clinical Safety)**: nhận thấy CoT làm rớt -7.69% trên câu hỏi đóng Yes/No do suy diễn lan man (Overthinking), hệ thống ưu tiên nhánh Direct cho các câu hỏi nhị phân.  
-> 2. Để kiểm soát rủi ro phụ thuộc vào luật thủ công, chúng em đã thực hiện **Đánh giá Ngoài Mẫu (Out-of-Fold Cross-Validation)** bằng Bộ định tuyến học máy (TF-IDF + Logistic Regression với $C=1.0$ cố định, không quét tìm siêu tham số):  
->    - Khi đánh giá trên 5 fold kiểm thử độc lập (mỗi fold được dự đoán bởi mô hình chưa từng thấy câu hỏi đó lúc huấn luyện), mức tăng ngoài mẫu đạt **$+2.26\% \pm 1.44\%$** (thắng ở cả 5/5 fold).  
->    - Mức tăng này tương đồng với mức chênh lệch ban đầu ($+2.36\%$), cho thấy các đặc trưng cú pháp và từ vựng lâm sàng có tính khái quát tốt ngoài mẫu, qua đó giảm thiểu đáng kể mối lo ngại về việc kết quả chỉ là do tinh chỉnh sau khi xem tập test."*
+> *"Dạ thưa Thầy/Cô, nhóm nghiên cứu xin giải trình rõ ràng và minh bạch hai khía cạnh:  
+> 1. **Về nguồn gốc luật heuristic:** Xuất phát từ quan sát lâm sàng: nhận thấy CoT làm rớt -7.69% trên câu hỏi đóng Yes/No do suy diễn lan man (Overthinking), hệ thống ưu tiên nhánh Direct cho câu hỏi nhị phân. Tuy nhiên, vì toàn bộ 1.061 câu hỏi này vốn trích từ tập kiểm thử của SLAKE, nguy cơ kết quả bị lạc quan do quy tắc được điều chỉnh sau khi xem dữ liệu test (post-hoc tuning) là hoàn toàn có cơ sở và nhóm xin ghi nhận rõ ràng hạn chế này trong báo cáo.  
+> 2. **Về kiểm chứng ngoài mẫu (Nested 5-Fold Cross-Validation):** Để kiểm tra tính ổn định, nhóm đã huấn luyện mô hình học máy TF-IDF + Logistic Regression ($C=1.0$ cố định, không quét siêu tham số) trên các fold luân phiên. Trên dữ liệu chưa từng thấy lúc huấn luyện, bộ định tuyến học máy tái lập mức chênh lệch trung bình $+2.26\% \pm 1.44\%$ (đều duy trì giá trị dương qua cả 5 fold).  
+> Kết quả này chứng minh rằng bộ định tuyến học máy có **tính ổn định nội bộ cao** trong việc tự động nhận biết các đặc trưng cú pháp để tái hiện quy tắc phân loại; tuy nhiên nhóm xin nhấn mạnh đây là minh chứng cho tính ổn định nội bộ trong tái tạo luật, chứ **chưa thể coi là sự bảo đảm cho khả năng tổng quát hóa** sang các bộ dữ liệu y khoa bên ngoài khác."*

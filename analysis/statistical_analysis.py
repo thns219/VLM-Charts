@@ -287,13 +287,6 @@ for idx in charxiv_df["chart_index"]:
     ])
 cx_vis_matrix = np.array(cx_vis_list, dtype=np.float32)
 
-cx_tfidf = TfidfVectorizer(max_features=2500, ngram_range=(1, 2))
-cx_text_matrix = cx_tfidf.fit_transform(charxiv_df["question"].fillna("")).toarray()
-
-scaler = StandardScaler()
-cx_vis_scaled = scaler.fit_transform(cx_vis_matrix)
-cx_multi_matrix = np.hstack([cx_text_matrix, cx_vis_scaled])
-
 # Target strategy in repo: 'Adaptive_LoRA_CoT' vs 'Direct_Zero_Shot'
 cx_y_strategy = charxiv_df["routed_strategy"].values
 cx_y_bin = (cx_y_strategy == "Adaptive_LoRA_CoT").astype(int)
@@ -303,17 +296,32 @@ cx_idx = np.arange(len(charxiv_df))
 cx_train_idx, cx_tmp_idx = train_test_split(cx_idx, test_size=0.40, random_state=42, stratify=cx_y_bin)
 cx_val_idx, cx_test_idx  = train_test_split(cx_tmp_idx, test_size=0.50, random_state=42, stratify=cx_y_bin[cx_tmp_idx])
 
+# Strictly leak-free: fit vectorizer & scaler only on training partition (N=300)
+cx_tfidf = TfidfVectorizer(max_features=2500, ngram_range=(1, 2))
+cx_text_tr = cx_tfidf.fit_transform(charxiv_df["question"].iloc[cx_train_idx].fillna("")).toarray()
+cx_text_te = cx_tfidf.transform(charxiv_df["question"].iloc[cx_test_idx].fillna("")).toarray()
+cx_text_va = cx_tfidf.transform(charxiv_df["question"].iloc[cx_val_idx].fillna("")).toarray()
+
+scaler = StandardScaler()
+cx_vis_tr = scaler.fit_transform(cx_vis_matrix[cx_train_idx])
+cx_vis_te = scaler.transform(cx_vis_matrix[cx_test_idx])
+cx_vis_va = scaler.transform(cx_vis_matrix[cx_val_idx])
+
+cx_multi_tr = np.hstack([cx_text_tr, cx_vis_tr])
+cx_multi_te = np.hstack([cx_text_te, cx_vis_te])
+cx_multi_va = np.hstack([cx_text_va, cx_vis_va])
+
 # A. Text-only Router
-clf_cx_text = LogisticRegression(C=1.0, max_iter=500, random_state=42).fit(cx_text_matrix[cx_train_idx], cx_y_bin[cx_train_idx])
-pred_cx_text_test = clf_cx_text.predict(cx_text_matrix[cx_test_idx])
+clf_cx_text = LogisticRegression(C=1.0, max_iter=500, random_state=42).fit(cx_text_tr, cx_y_bin[cx_train_idx])
+pred_cx_text_test = clf_cx_text.predict(cx_text_te)
 
 # B. Visual-only Router
-clf_cx_vis = LogisticRegression(C=1.0, max_iter=500, random_state=42).fit(cx_vis_scaled[cx_train_idx], cx_y_bin[cx_train_idx])
-pred_cx_vis_test = clf_cx_vis.predict(cx_vis_scaled[cx_test_idx])
+clf_cx_vis = LogisticRegression(C=1.0, max_iter=500, random_state=42).fit(cx_vis_tr, cx_y_bin[cx_train_idx])
+pred_cx_vis_test = clf_cx_vis.predict(cx_vis_te)
 
 # C. Multimodal Router
-clf_cx_multi = LogisticRegression(C=1.0, max_iter=500, random_state=42).fit(cx_multi_matrix[cx_train_idx], cx_y_bin[cx_train_idx])
-pred_cx_multi_test = clf_cx_multi.predict(cx_multi_matrix[cx_test_idx])
+clf_cx_multi = LogisticRegression(C=1.0, max_iter=500, random_state=42).fit(cx_multi_tr, cx_y_bin[cx_train_idx])
+pred_cx_multi_test = clf_cx_multi.predict(cx_multi_te)
 
 def eval_clf(y_true, y_pred, names):
     return {
@@ -402,9 +410,11 @@ oof_cx_router_std  = float(np.std(oof_cx_router_acc))
 oof_cx_learned_mean = float(np.mean(oof_cx_learned_vqa))
 oof_cx_learned_std  = float(np.std(oof_cx_learned_vqa))
 
+test_router_acc = float((pred_cx_text_test == cx_y_bin[cx_test_idx]).mean()) * 100
+
 print("\nCharXiv End-to-End VQA Accuracy Using Learned Inferred Router (No Ground-Truth Metadata):")
 print(f"  Hold-out Test Set (N=100):")
-print(f"    Router Label Accuracy: 88.0% (Wilson 95% CI: [{w_lo_r}%, {w_hi_r}%])")
+print(f"    Router Label Accuracy: {test_router_acc:.1f}% (Wilson 95% CI: [{w_lo_r}%, {w_hi_r}%])")
 print(f"    Direct Zero-Shot VQA:  {test_vqa_dir_acc:.2f}%")
 print(f"    Standard CoT VQA:      {test_vqa_cot_acc:.2f}%")
 print(f"    Ground-Truth Heuristic:{test_vqa_heur_acc:.2f}%")
@@ -418,7 +428,7 @@ print(f"    Learned Router VQA:    {oof_cx_learned_mean:.2f}% +/- {oof_cx_learne
 
 report["charxiv_learned_router_vqa"] = {
     "test_n": len(cx_test_idx),
-    "router_classification_accuracy": 88.0,
+    "router_classification_accuracy": round(test_router_acc, 2),
     "router_wilson_ci_95": [w_lo_r, w_hi_r],
     "direct_vqa_acc": test_vqa_dir_acc,
     "cot_vqa_acc": test_vqa_cot_acc,
