@@ -148,7 +148,11 @@ def ask_qwen(model, processor, image, question: str) -> str:
     ).to(model.device)
 
     with torch.no_grad():
-        generated_ids = model.generate(**inputs, max_new_tokens=MAX_NEW_TOKENS)
+        generated_ids = model.generate(
+            **inputs,
+            max_new_tokens=MAX_NEW_TOKENS,
+            do_sample=False,
+        )
 
     generated_ids_trimmed = [
         out_ids[len(in_ids):]

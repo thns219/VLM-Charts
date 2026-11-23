@@ -474,7 +474,7 @@ def run_qwen_cloud_inference(question, image_b64, route):
                 "model": model_name,
                 "messages": messages,
                 "max_tokens": 512,
-                "temperature": 0.1
+                "temperature": 0.0
             }
             t0 = time.time()
             try:
@@ -515,7 +515,7 @@ def run_qwen_cloud_inference(question, image_b64, route):
             "model": HF_MODEL,
             "messages": messages,
             "max_tokens": 512,
-            "temperature": 0.1
+            "temperature": 0.0
         }
         t0 = time.time()
         try:

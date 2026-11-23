@@ -272,7 +272,7 @@ def ask_qwen(qwen_model, qwen_processor, image, question):
     image_inputs, video_inputs = process_vision_info(messages)
     inputs = qwen_processor(text=[text], images=image_inputs, videos=video_inputs, padding=True, return_tensors="pt").to(qwen_model.device)
     with torch.no_grad():
-        generated_ids = qwen_model.generate(**inputs, max_new_tokens=MAX_NEW_TOKENS)
+        generated_ids = qwen_model.generate(**inputs, max_new_tokens=MAX_NEW_TOKENS, do_sample=False)
     trimmed = [out[len(inp):] for inp, out in zip(inputs.input_ids, generated_ids)]
     output_text = qwen_processor.batch_decode(trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)
     return output_text[0].strip() if output_text else ""

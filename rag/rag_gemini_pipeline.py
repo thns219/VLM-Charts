@@ -31,8 +31,10 @@ from PIL import Image
 try:
     from google import genai
     from google.genai import errors as genai_errors
+    from google.genai import types as genai_types
 except ImportError:
     genai = None
+    genai_types = None
 
 from charxiv_match import match_fixed
 
@@ -72,7 +74,16 @@ def ask_gemini(client, image, question):
 
     for attempt in range(MAX_RETRIES):
         try:
-            resp = client.models.generate_content(model=MODEL_NAME, contents=[prompt, img_resized])
+            gen_cfg = genai_types.GenerateContentConfig(
+                temperature=0.0,
+                top_p=1.0,
+                max_output_tokens=64
+            ) if genai_types else {"temperature": 0.0}
+            resp = client.models.generate_content(
+                model=MODEL_NAME,
+                contents=[prompt, img_resized],
+                config=gen_cfg
+            )
             text = (resp.text or "").strip()
             if text:
                 return text

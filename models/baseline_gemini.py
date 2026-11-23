@@ -36,6 +36,7 @@ from tqdm import tqdm
 from datasets import load_dataset
 from google import genai
 from google.genai import errors as genai_errors
+from google.genai import types as genai_types
 
 from charxiv_match import match_fixed
 
@@ -138,7 +139,15 @@ def ask_gemini(client, image, question: str):
 
     for attempt in range(MAX_RETRIES):
         try:
-            response = client.models.generate_content(model=MODEL_NAME, contents=[prompt, image])
+            response = client.models.generate_content(
+                model=MODEL_NAME,
+                contents=[prompt, image],
+                config=genai_types.GenerateContentConfig(
+                    temperature=0.0,
+                    top_p=1.0,
+                    max_output_tokens=64
+                )
+            )
             text = (response.text or "").strip()
             if text:
                 return text, ""
