@@ -73,6 +73,10 @@ Ghép nối đặc trưng: $X_{\text{multimodal}} = \left[ X_{\text{textual}} \,
 
 *Kết luận thực nghiệm:* Việc chuyển từ quy tắc Heuristic phụ thuộc nhãn `sub_type` sang Bộ Định tuyến Học máy tự động độc lập hoàn toàn khả thi trong thực tế, bảo toàn trọn vẹn $99.5\%$ hiệu năng định tuyến mà không cần metadata.
 
+> [!NOTE]
+> **Lưu ý về độ nhạy phiên bản thư viện (Cross-version Consistency):**
+> Thuật toán tối ưu hóa lồi L-BFGS của `scikit-learn` có sự khác biệt nhỏ về điều kiện dừng và xấp xỉ ma trận Hessian giữa các phiên bản (bản `1.7.x` cho kết quả Router = $86.0\%$ / VQA OOF = $39.40\%$, trong khi bản `1.9.x` cho kết quả Router = $87.0\%$ / VQA OOF = $39.60\%$). Sự chênh lệch này chỉ đúng $1$ mẫu đơn lẻ ($1/100$ hoặc $1/500$), và cả hai đều nằm trọn vẹn trong khoảng tin cậy Wilson $95\%$ $[77.86\%, 91.47\%]$ (hoặc $[79.02\%, 92.21\%]$). Kịch bản xác minh [verify_results.py](file:///d:/THCN/VLM-Charts/analysis/verify_results.py) đã thiết lập ngưỡng dung sai $\pm 1$ câu để tương thích hoàn toàn trên mọi môi trường.
+
 ---
 
 ### 3. ĐÁNH GIÁ THỰC CHẤT TRÊN SLAKE

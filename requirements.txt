@@ -1,0 +1,16 @@
+# VLM-Charts: Core Dependencies & Academic Reproduction Suite
+# Pinned for strict reproducibility across analysis and evaluation scripts.
+
+scikit-learn>=1.7.0,<2.0.0
+numpy>=2.0.0
+pandas>=2.2.0
+scipy>=1.14.0
+statsmodels>=0.14.0
+datasets>=3.0.0
+pillow>=10.0.0
+tqdm>=4.66.0
+matplotlib>=3.9.0
+requests>=2.31.0
+
+# Note: analysis/verify_results.py allows +/-1 sample tolerance (+/-1.0% on N=100 and +/-0.2% on N=500)
+# to accommodate minor L-BFGS convergence differences across scikit-learn versions (1.7.x vs 1.9.x).

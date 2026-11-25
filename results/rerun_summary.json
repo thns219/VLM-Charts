@@ -1,0 +1,18 @@
+{
+  "n_samples": 100,
+  "prediction_exact_match_normalized": 93,
+  "prediction_exact_match_normalized_percent": 93.0,
+  "direction_changes": {
+    "correct_to_incorrect": 2,
+    "incorrect_to_correct": 2,
+    "total_flips": 4
+  },
+  "accuracy_old_match_fixed": 46.0,
+  "accuracy_new_match_fixed": 46.0,
+  "accuracy_delta": 0.0,
+  "determinism_check": {
+    "differing_predictions_raw": 0,
+    "differing_predictions_normalized": 0,
+    "is_deterministic": true
+  }
+}
